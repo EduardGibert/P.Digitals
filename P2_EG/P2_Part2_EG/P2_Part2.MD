@@ -53,4 +53,4 @@ Podemos ver en la parte del loop que el codigo esta hecho para que la interrupci
 
 El muestreo por pantalla queda de la siguiente forma:
 
-![alt text](Part2_interrupt.JPG)
+![](Part2_interrupt.JPG)
