@@ -4,22 +4,26 @@
 
 ```
 #include <Arduino.h>
-#define LED 0
+
+#define LED 16
 
 void setup() {
-    Serial.begin(115200);
-    pinMode(LED,OUTPUT);
+  // put your setup code here, to run once:
+  Serial.begin(9600);
+  pinMode(LED,OUTPUT);
 }
 
 void loop() {
-    delay(500);
-    Serial.println("ON");
-    digitalWrite(LED,HIGH);
-    delay(500);
-    Serial.println("OFF");
-    digitalWrite(LED,LOW);
-}
+  // put your main code here, to run repeatedly:
+  digitalWrite(LED,HIGH);
+  Serial.println("ON");
+  delay(500);
+  digitalWrite(LED,HIGH);
+  Serial.println("OFF");
+  digitalWrite(LED,LOW);
+  delay(500);
 
+}
 ```
 
 
