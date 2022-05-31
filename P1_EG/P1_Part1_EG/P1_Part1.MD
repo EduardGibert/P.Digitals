@@ -1,4 +1,4 @@
-# PRÀCTICA 1
+# Pràctica 1 Parte 2
 
 ## Codigo:
 
