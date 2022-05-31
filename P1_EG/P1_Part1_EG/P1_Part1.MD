@@ -35,7 +35,7 @@ void loop() {
 graph LR;
     Programa-->Build;
     Build-->Upload;
-    Upload-->|LED|Monitor;
+    Upload-->Monitor;
     Monitor-->ON
     Monitor-->OFF
     ON-->|500 MS|OFF;
