@@ -168,7 +168,12 @@ Para poder escribir usaremos la aplicacion que nos han recomendado llamada "Seri
 
 Para connectarnos, abrimos la aplicación y en el apartado de devices nos va a salir el nombre se nuestra placa "ESP32Edu" en nuestro caso. Cuando pulsemos si todo va bien nuestros dispositivos se sincronizaran y se nos abrira un terminal para escribir. 
 
-![alt text](terminal.JPG)
+
+
+https://user-images.githubusercontent.com/100867309/171182685-80bb078d-1524-401b-891b-36dd41a60b81.mp4
+
+![P3_part2](https://user-images.githubusercontent.com/100867309/171182707-e02d681a-6f16-469e-92cd-e493d92fac11.jpeg)
+
 
 Cuándo escribimos desde el móbil, el mensaje se va a mostrar por la pantalla del ordenador.
 
