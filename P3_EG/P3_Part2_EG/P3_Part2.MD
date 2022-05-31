@@ -172,9 +172,8 @@ Para connectarnos, abrimos la aplicación y en el apartado de devices nos va a s
 
 https://user-images.githubusercontent.com/100867309/171182685-80bb078d-1524-401b-891b-36dd41a60b81.mp4
 
-![P3_part2](https://user-images.githubusercontent.com/100867309/171182707-e02d681a-6f16-469e-92cd-e493d92fac11.jpeg)
 
 
-Cuándo escribimos desde el móbil, el mensaje se va a mostrar por la pantalla del ordenador.
+Cuándo escribimos desde el móbil (como se ve que hemos hecho en el video anterior), el mensaje se va a mostrar por la pantalla del ordenador.
 
 ![](P3_part2.jpeg)
