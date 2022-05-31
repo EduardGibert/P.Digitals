@@ -164,8 +164,6 @@ Esta práctica, consiste en llevar a cabo una comunicación bluetooth, esta ser�
 Para ello necesitamos inicializar nuesta placa para que esta sea capaz de recibir estos mensajes. 
 Una vez hecho esto ejecutaremos el código ya visto, que una vez subido a la placa nos permitira sincronizarla con el móbil.
 
-![alt text](BEFORECONNECT.JPG)
-
 Para poder escribir usaremos la aplicacion que nos han recomendado llamada "Serial Bluetooth Terminal"
 
 Para connectarnos, abrimos la aplicación y en el apartado de devices nos va a salir el nombre se nuestra placa "ESP32Edu" en nuestro caso. Cuando pulsemos si todo va bien nuestros dispositivos se sincronizaran y se nos abrira un terminal para escribir. 
@@ -174,4 +172,4 @@ Para connectarnos, abrimos la aplicación y en el apartado de devices nos va a s
 
 Cuándo escribimos desde el móbil, el mensaje se va a mostrar por la pantalla del ordenador.
 
-![alt text](MNJPC.JPG)
+![](P3_part2.jpeg)
