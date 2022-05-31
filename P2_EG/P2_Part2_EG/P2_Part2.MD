@@ -51,6 +51,6 @@ En el caso de este codigo , lo que hace es hacer una interrupcion cada "x" tiemp
 
 Podemos ver en la parte del loop que el codigo esta hecho para que la interrupcion sea cada segundo, y que cuando esta ocurra nos mostrara por pantalla un mensaje diciendonos que ha sido interrumpido y el numero total de interrupciones que han ocurrido mientras el programa esta funcionando.
 
-El muestreo por pantalla queda de la siguiente forma:
+La terminal nos muestra lo siguiente:
 
 ![](Part2_interrupt.JPG)
