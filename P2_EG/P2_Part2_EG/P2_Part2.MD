@@ -53,4 +53,4 @@ Podemos ver en la parte del loop que el codigo esta hecho para que la interrupci
 
 La terminal nos muestra lo siguiente:
 
-![](Part2_interrupt.JPG)
+![](P2_interrupt.jpg)
