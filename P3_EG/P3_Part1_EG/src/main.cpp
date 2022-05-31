@@ -4,7 +4,7 @@ modified on 25 MAy 2019
 by Mohammadreza Akbari @ Electropeak
 hvoid handle_root()ttps://electropeak.com/learn
 */
-/*
+
 #include <WiFi.h>
 #include <WebServer.h>
 void handle_root();
@@ -53,4 +53,3 @@ String HTML = "<!DOCTYPE html>\
 void handle_root() {
 server.send(200, "text/html", HTML);
 }
-*/
