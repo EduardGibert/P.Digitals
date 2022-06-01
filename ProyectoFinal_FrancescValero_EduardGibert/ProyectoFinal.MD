@@ -419,18 +419,11 @@ Inicializamos un monitor con un protocolo de communicación I2C:
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &I2Cdisplay, -1);
 ```
 
-Declaramos el pin de los les den este caso el GPIO 27, la cantidad de direcciones, en este caso 12 y el Adafruit_NeoPixel al cual llamamos strip pa poder controlar los LEDs RGb:
-```
-#define LED_PIN    27  // GPIO the LEDs are connected to
-#define LED_COUNT  12  // Number of LEDs
-Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
-```
-
 Asignamos los pines que vamos a usar para conectar el dispositivo I2C:
 - SDA --> GPIO 22
 - SCL --> GPIO 21
 
-También creamos un objeto que llamaremos bme con el Adafruit_BME280 con los pines predeterminados:
+También creamos un objeto que llamaremos bme con el Adafruit_BME280:
 ```
 #define I2C_SDA 21
 #define I2C_SCL 22
@@ -438,15 +431,10 @@ TwoWire I2CBME = TwoWire(0);
 Adafruit_BME280 bme;
 ```
 
-Definimos el pin de la GPIO 33 del cual obtendremos los datos de la LDR:
-```
-const int ldr = 33;
-```
-
 Para poder manejar los contadores definimos dos nuevas variables:
 ```
 unsigned long lastTimer = 0;
-unsigned long timerDelay = 15000; 
+unsigned long timerDelay = 7500; 
 ```
 
 Segidamente creamos los iconos que se mostraran por pantalla junto los valores que obtengamos del sensor:
