@@ -69,7 +69,8 @@ AudioGeneratorAAC *aac;
 AudioOutputI2S *out;
 ```
 
-Ya en el setup, comenzamos iniciando el serial y continuamos asiganndo la variable in. En el la linea "AudioFileSourcePROGMEM(sampleaac, sizeof(sampleaac));" el qual importa el archivo de audio en el formato '.acc'. En "aac = new AudioGeneratorAAC();" asignamos a esta variable para poder descodificar el audie en el formato. Seguidamente asignamos la variable out para poder establecer la ganancia del audio "out = new AudioOutputI2S();". En los siguientes asignamos los pines de salida y finalmente la última linea es para la entrada y la salida.
+Seguidamente en el setup, iniciamos el serial y asignamos una variable "in". Esta variable sera la que importara el archivo de audio. "Acc" sera la variable variable para poder descodificar el audio. 
+La variable "Out" es la encargada de la ganancia del audio. Seguidamente asignamos los pines de salida y la última linea es para la entrada y la salida.
 ```
 void setup(){
 
@@ -83,7 +84,7 @@ void setup(){
 }
 ```
 
-Finalmente ya en el void loop se inicia primeramente un bucle que haces que se descodifique el acc. Por otra banda si no pude recorrer el bucle se muestra por pantalla y al monitorear el programa se muestra por pantalla el mensaje de "Sound Generator"
+Dentro de el void loop se inicia un loop que descodifica el "acc". Si todo sale bien, saldra por pantalla el mensaje "Sound Generator" en caso contrario el mensaje no saldria.
 ```
 void loop(){
   if (aac->isRunning()) {
