@@ -436,117 +436,11 @@ Para poder manejar los contadores definimos dos nuevas variables:
 unsigned long lastTimer = 0;
 unsigned long timerDelay = 7500; 
 ```
-
-Segidamente creamos los iconos que se mostraran por pantalla junto los valores que obtengamos del sensor:
-```
-unsigned char temperature_icon[] ={
-  0b00000001, 0b11000000, //        ###      
-  0b00000011, 0b11100000, //       #####     
-  0b00000111, 0b00100000, //      ###  #     
-  0b00000111, 0b11100000, //      ######     
-  0b00000111, 0b00100000, //      ###  #     
-  0b00000111, 0b11100000, //      ######     
-  0b00000111, 0b00100000, //      ###  #     
-  0b00000111, 0b11100000, //      ######     
-  0b00000111, 0b00100000, //      ###  #     
-  0b00001111, 0b11110000, //     ########    
-  0b00011111, 0b11111000, //    ##########   
-  0b00011111, 0b11111000, //    ##########   
-  0b00011111, 0b11111000, //    ##########   
-  0b00011111, 0b11111000, //    ##########   
-  0b00001111, 0b11110000, //     ########    
-  0b00000111, 0b11100000, //      ######     
-};
-
-unsigned char humidity_icon[] ={
-  0b00000000, 0b00000000, //                 
-  0b00000001, 0b10000000, //        ##       
-  0b00000011, 0b11000000, //       ####      
-  0b00000111, 0b11100000, //      ######     
-  0b00001111, 0b11110000, //     ########    
-  0b00001111, 0b11110000, //     ########    
-  0b00011111, 0b11111000, //    ##########   
-  0b00011111, 0b11011000, //    ####### ##   
-  0b00111111, 0b10011100, //   #######  ###  
-  0b00111111, 0b10011100, //   #######  ###  
-  0b00111111, 0b00011100, //   ######   ###  
-  0b00011110, 0b00111000, //    ####   ###   
-  0b00011111, 0b11111000, //    ##########   
-  0b00001111, 0b11110000, //     ########    
-  0b00000011, 0b11000000, //       ####      
-  0b00000000, 0b00000000, //                 
-};
-
-unsigned char arrow_down_icon[] ={
-  0b00001111, 0b11110000, //     ########    
-  0b00011111, 0b11111000, //    ##########   
-  0b00011111, 0b11111000, //    ##########   
-  0b00011100, 0b00111000, //    ###    ###   
-  0b00011100, 0b00111000, //    ###    ###   
-  0b00011100, 0b00111000, //    ###    ###   
-  0b01111100, 0b00111110, //  #####    ##### 
-  0b11111100, 0b00111111, // ######    ######
-  0b11111100, 0b00111111, // ######    ######
-  0b01111000, 0b00011110, //  ####      #### 
-  0b00111100, 0b00111100, //   ####    ####  
-  0b00011110, 0b01111000, //    ####  ####   
-  0b00001111, 0b11110000, //     ########    
-  0b00000111, 0b11100000, //      ######     
-  0b00000011, 0b11000000, //       ####      
-  0b00000001, 0b10000000, //        ##       
-};
-
-unsigned char sun_icon[] ={
-  0b00000000, 0b00000000, //                 
-  0b00100000, 0b10000010, //   #     #     # 
-  0b00010000, 0b10000100, //    #    #    #  
-  0b00001000, 0b00001000, //     #       #   
-  0b00000001, 0b11000000, //        ###      
-  0b00000111, 0b11110000, //      #######    
-  0b00000111, 0b11110000, //      #######    
-  0b00001111, 0b11111000, //     #########   
-  0b01101111, 0b11111011, //  ## ######### ##
-  0b00001111, 0b11111000, //     #########   
-  0b00000111, 0b11110000, //      #######    
-  0b00000111, 0b11110000, //      #######    
-  0b00010001, 0b11000100, //    #   ###   #  
-  0b00100000, 0b00000010, //   #           # 
-  0b01000000, 0b10000001, //  #      #      #
-  0b00000000, 0b10000000, //         #       
-};
-```
-
-A través de ponerle un color, un tiempo entre encendido de leds y el numero de leds a encender a través de un bucle encenderemos todas las leds una a una con el color que le hemos indicado por parámetros:
-```
-// Clear the LEDs
-void colorWipe(uint32_t color, int wait, int numNeoPixels) {
-  for(int i=0; i<numNeoPixels; i++) { 
-    strip.setPixelColor(i, color);    
-    strip.show();                        
-    delay(wait);                           
-  }
-}
-```
-
-Le pasaremos por paramentó el tiempo de encendido entre led y led y iremos enciendo una a una con un color diferente haciendo que las leds que se muestren como un arcoíris en conjunto:
-```
-// Rainbow cycle along all LEDs. Pass delay time (in ms) between frames.
-void rainbow(int wait) {
-  long firstPixelHue = 256;
-    for(int i=0; i<strip.numPixels(); i++) { 
-      int pixelHue = firstPixelHue + (i * 65536L / strip.numPixels());
-      strip.setPixelColor(i, strip.gamma32(strip.ColorHSV(pixelHue)));
-    }
-    strip.show(); 
-    delay(wait); 
-}
-```
-
-Este subprograma se encarga de mostrar en el display cinco circumferncias, las cuales aparecen en la parte inferior y tienen como objetivo marcar, de forma que la rendonda circumferéncia que este rellena es el numero de pantalla que se esta mostrando en ese preciso momento:
+Ahora nos encontramos nuestro primer subprograma cuyo trabajo es mostrar unas pequeñas circumeferncias debajo del display para saber en que pantalla nos encontramos en ese preciso momento:
 ```
 void displayIndicator(int displayNumber) {
-  int xCoordinates[5] = {44, 54, 64, 74, 84};
-  for (int i =0; i<5; i++) {
+  int xCoordinates[5] = {49, 59, 69, 79};
+  for (int i =0; i<4; i++) {
     if (i == displayNumber) {
       display.fillCircle(xCoordinates[i], 60, 2, WHITE);
     }
@@ -556,10 +450,8 @@ void displayIndicator(int displayNumber) {
   }
 }
 ```
-
-Este subprograma muestra la primer a pantalla del display, donde se muestra la fecha y hora, juntamente con la fecha del dia.
+Ahora veremos este subprograma el cual nos muestra la primera pantalla del display,la cual mostrara hora, dia y fecha.
 ```
-//SCREEN NUMBER 0: DATE AND TIME
 void displayLocalTime(){
   struct tm timeinfo;
   if(!getLocalTime(&timeinfo)){
@@ -612,18 +504,17 @@ void displayLocalTime(){
   display.print(year);
   displayIndicator(displayScreenNum);
   display.display();
-  rainbow(10);
 }
 ```
-
-El siguiente subprograma muestra por la segunda pantalla del display la tempereatura ambiente que capta el sensor, esta es muestreada en un tamaño mayor, ya que en un tamaño inferior y en segundo plano este muestra la humedad y pla presión ambiente:
+El siguiente subprograma se encarga de la segunda pantalla del display la cual nos mostrara la tempereatura ambiente que capta el sensor:
 ```
-// SCREEN NUMBER 1: TEMPERATURE
 void displayTemperature(){
   display.clearDisplay();
-  display.setTextSize(2);
-  display.drawBitmap(15, 5, temperature_icon, 16, 16 ,1);
-  display.setCursor(35, 5);
+  display.setTextSize(1);
+  display.setCursor(0, 5);
+  display.print("Temperature ");
+  display.setTextSize(3);
+  display.setCursor(15, 25);
   delay(200);
   float temperature = bme.readTemperature();
   temperature = bme.readTemperature();
@@ -635,124 +526,54 @@ void displayTemperature(){
   display.print("C");
   display.setCursor(0, 34);
   display.setTextSize(1);
-  display.print("Humidity: ");
-  display.print(bme.readHumidity());
-  display.print(" %");
-  display.setCursor(0, 44);
-  display.setTextSize(1);
-  display.print("Pressure: ");
-  display.print(bme.readPressure()/100.0F);
-  display.print(" hpa");
   displayIndicator(displayScreenNum);
   display.display();
-  int temperaturePer = map(temperature, -5, 36, 0, LED_COUNT-1);
-  colorWipe(strip.Color(0,   255,   0), 50, temperaturePer);
 }
 ```
 
-El siguiente subprograma muestra por la segunda pantalla del display la humedad que capta el sensor, esta es muestreada en un tamaño mayor, ya que en un tamaño inferior y en segundo plano en este caso se muestra la temperatura y pla presión ambiente: 
+Este subprograma se encarga de la segunda pantalla del display y muestra la humedad que capta el sensor: 
 
 ```
-// SCREEN NUMBER 2: HUMIDITY
 void displayHumidity(){
   display.clearDisplay();
-  display.setTextSize(2);
-  display.drawBitmap(15, 5, humidity_icon, 16, 16 ,1);
-  display.setCursor(35, 5);
+  display.setTextSize(1);
+  display.setCursor(0, 5);
+  display.print("Humidity ");
+  display.setTextColor(WHITE);
+  display.setTextSize(3);
+  display.setCursor(15, 25);
   float humidity = bme.readHumidity();
   display.print(humidity);
+  display.setTextSize(1);
   display.print(" %");
   display.setCursor(0, 34);
   display.setTextSize(1);
-  display.print("Temperature: ");
-  display.print(bme.readTemperature());
-  display.cp437(true);
-  display.print(" ");
-  display.write(167);
-  display.print("C");
-  display.setCursor(0, 44);
-  display.setTextSize(1);
-  display.print("Pressure: ");
-  display.print(bme.readPressure()/100.0F);
-  display.print(" hpa");
   displayIndicator(displayScreenNum);
   display.display();
-  int humidityPer = map(humidity, 0, 100, 0, LED_COUNT-1);
-  colorWipe(strip.Color(0,   0,   255), 50, humidityPer);
 }
 ```
 
-El siguiente subprograma muestra por la segunda pantalla del display la presión que capta el sensor, esta es muestreada en un tamaño mayor, ya que en un tamaño inferior y en segundo plano en este caso se muestra la temperatura y humedad del ambiente: 
+Finalmente este subprograma se encarga de mostrar por la pantalla del display la presión que capta el sensor: 
 ```
-// SCREEN NUMBER 3: PRESSURE
 void displayPressure(){
   display.clearDisplay();
+  display.setTextSize(1);
+  display.setCursor(0, 5);
+  display.print("Pressure ");
   display.setTextSize(2);
-  display.drawBitmap(0, 5, arrow_down_icon, 16, 16 ,1);
-  display.setCursor(20, 5);
+  display.setCursor(15, 25);
   display.print(bme.readPressure()/100.0F);
   display.setTextSize(1);
   display.print(" hpa");
   display.setCursor(0, 34);
   display.setTextSize(1);
-  display.print("Temperature: ");
-  display.print(bme.readTemperature());
-  display.cp437(true);
-  display.print(" ");
-  display.write(167);
-  display.print("C");
-  display.setCursor(0, 44);
-  display.setTextSize(1);
-  display.print("Humidity: ");
-  display.print(bme.readHumidity());
-  display.print(" hpa");
   displayIndicator(displayScreenNum);
   display.display();
-  colorWipe(strip.Color(255,   0,   255), 50, 12);
 }
 ```
-
-El siguiente subprograma muestra por la segunda pantalla del display la luminosidad que capta la LDR, esta es muestreada en un tamaño mayor, ya que en un tamaño inferior y en segundo plano en este caso se muestra la temperatura y humedad ambiente: 
+Ahora este subprograma se encarara de ir actualizando las pantallas y comprovar que se muestre la correcta, para ello usaremos unos if ese de manera que siempre hay una pantalla mostrandose:
 ```
-// SCREEN NUMBER 4: LUMINOSITY
-void displayLDR(){
-  display.clearDisplay();
-  display.setTextSize(2);
-  display.drawBitmap(33, 5, sun_icon, 16, 16 ,1);
-  display.setCursor(53, 5);
-  int ldrReading = map(analogRead(ldr), 0, 4095, 100, 0);
-  delay(100);
-  display.print(ldrReading);
-  display.print(" %");
-  display.setTextSize(1);
-  display.setCursor(0, 34);
-  display.print("Temperature: ");
-  float temperatura = bme.readTemperature();
-  delay(100);
-  temperatura = bme.readTemperature();
-  display.print(temperatura);
-  display.print(" ");
-  display.cp437(true);
-  display.write(167);
-  display.print("C");
-  display.setCursor(0, 44);
-  display.setTextSize(1);
-  display.print("Humidity: ");
-  display.print(bme.readHumidity());
-  display.print(" %");
-  display.setCursor(0, 44);
-  displayIndicator(displayScreenNum);
-  display.display();
-  int ldrReadingPer = map(ldrReading, 0, 100, 0, LED_COUNT-1);
-  colorWipe(strip.Color(255,   255,   0), 50, ldrReadingPer);
-}
-```
-
-Este subprograma se encargará de actualizar y verificar que la pantalla que se muestre sea la correcta a través de la siguiente programación, primeramente nos encontramos con varios if, else if  y else, en cada uno de los if se compone por la condición displayScreenNum == _  un número del 0 al 3 ya que el quinto será el else que se ejecutará en caso de no ser ninguna de las 4 primeras pantallas a mostrar:
-```
-// Display the right screen accordingly to the displayScreenNum
 void updateScreen() {
-  colorWipe(strip.Color(0, 0, 0), 1, LED_COUNT);
   if (displayScreenNum == 0){
     displayLocalTime();
   }
@@ -762,16 +583,15 @@ void updateScreen() {
   else if (displayScreenNum ==2){
     displayHumidity();
   }
-  else if (displayScreenNum==3){
-    displayPressure();
-  }
   else {
-    displayLDR();
+    displayPressure();
   }
 }
 ```
-
-El primero de ellos, es decir el set up tiene el siguiente seguido de comandos, primeramente nos encontramos con el típico serial.begin el cual tiene como funcionalidad abrir el puerto serie y fijar la velocidad para la transmisión de datos en serie del programa, esta velocidad a la que se inicia debe ser la misma a la indicada en el monitor_speed del .ini, seguidamente nos encontramos con la inicialización/asignación del botón definido con anterioridad al modo de input junto a iniciar los dos componentes de nuestro proyecto, es decir el bme280 y el display i2c ssd1306 a través de las líneas, I2CBME.begin (I2C_SDA, I2C_SCL, 100000) y I2Cdisplay.begin(I2Cdisplay_SDA, I2Cdisplay_SCL,100000) respectivamente, junto a la iniciación del display las siguientes 3 líneas tienen como objetivo comprobar si la conexión de esta es correcta por lo que no nos mostrara nadas por la terminal/monitor, limpiara el display por tal que no se muestre nada y configurara la letra a mostrar de color blanco, mientras que si esta no es correcta, es decir, no hay conexión con el display se nos mostrará un mensaje por el terminal/monitor del visual studio al ejecutar el programa. Seguido a esto hacemos un proceso igual pero ahora por tal de comprobar si tenemos conexión con el componente bme280 haciendo que si no se detecta este nos informe por terminal/monitor del visual studio al ejecutarlo  informándonos de que no se encuentra conexión con el componente. Una vez hechas las comprobaciones y verificar que tenemos conexión a los dos componentes inicializamos el conjunto de leds, pero no las encenderemos si no que iniciamos la comunicación con ellas y configuramos el brillo que tendrán estas, seguidamente nos encontramos con un seguido de instrucciones que nos conectaran la esp32 a el wifi con un conjunto de verificaciones que se nos muestran por terminal/monitor por tal de mantenernos informados si se a conectado de forma correcta o por si otra banda a fallado esta conexión. Por último para finalizar en bloque del set up nos encontramos con la instrucción configTime lo usamos por tal de sincronizar la hora entre la local y la UTC hora.
+Ahora llegamos al setup, el cual se encargara de todas las inicializaciones del programa.<br>
+Primeramente nos encontramos con unserial.begin el cual abre el puerto serie y fija la velocidad para la transmisión de datos, esta velocidad es la indicada en el  monitor_speed del .ini, seguidamente nos encontramos con la iniciacion de varios componentes de nuestro proyecto, como el bme280 y el display i2c ssd1306, tambien tenemos la comprovacion de que estos estan funcionando, ya que sino fuera asi, el programa nos daria un aviso de ello.<br>
+Seguidamente una vez hechas las comprobaciones y verificar que tenemos conexión nos encontramos con el codigo que nos conectara la esp32 a la red wifi, y de la misma manera que antes, en caso de que haya un fallo de conexion el mismo programa nos avisaria con un mensaje.<br>
+Por último vemos el codigo configTime el cual usamos para sincronizar la hora.
 ```
 void setup() {
   Serial.begin(115200);
@@ -793,11 +613,6 @@ void setup() {
     Serial.println("Could not find a valid BME280 sensor, check wiring!");
     while (1);
   }
-  
-  // Initialize WS2812B LEDs
-  strip.begin();           // INITIALIZE NeoPixel strip object (REQUIRED)
-  strip.show();            // Turn OFF all pixels ASAP
-  strip.setBrightness(50); // Set BRIGHTNESS to about 1/5 (max = 255)
 
   // Connect to Wi-Fi
   Serial.print("Connecting to ");
@@ -825,13 +640,14 @@ void setup() {
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
 }
 ```
+Finalmente llegamos al loop este se compone por varios bloques de instrucciones, primeramente nos encontramos el "if" encargado de cambiar de pantalla cada 7.5 segundos, esto lo hace sumando todos los milisegundos hasta llegar al numero que hemos establecido anteriormente.<br>
+A continuacion nos enconramos con el WifiClient, el cual nos dice si el cliente esta disponible ono, y es el encargado de mostrarnos la pagina creada anteriormente en HTML, de manera su funcion tambien es que se puedan ver los datos que lee nuestro sensor. Ademas, esta pagina ha sido hecha con un tiempo de actualizacionde 1 segundo, de manera que los datos que se veran en ella seran muy precisos.<br>
+Finalmente, nos encontramos con el bloque encargado de cerrar la conexion con el cliente y nos dejara un mensaje en la pantalla diciendonos que el cliente se ha desconectado.
 
-Por otro lado el bloque de loop se compone por el siguiente conjunto de instrucciones programadas en el, primeramente nos encontramos con un if el cual tiene como condición a través de la resta de dos variables que miden el tiempo que lleva en ejecución del programa uno con el total aumentando cada 1 milisegundo y el otro que suma de 15000 milisegundos en 15000 milisegundos por tal de que a los 15 segundos muestre la siguiente pantalla.
-Seguidamente nos encontramos con la declaración de un cliente si el servidor creado por wifi se encuentra disponible y inicia la comunicación con este, a través del conjunto de instrucciones que se encuentran si se cumple la condición del if que nos dice, que si el cliente está disponible, ejecutara un seguido de instrucciones por tal de mostrar en el servidor iniciado la página html programada anteriormente de forma correcta junto a a la ventaja que nos pone el cliente que es poder mostrar los valores de los sensores programados para mostrar en el display de forma más precisa, ya que esta pagina la hemos programado para que se actualice cada segundo, es decir tomará las medidas de los sensores cada segundo y nos lo mostrará por esta paguina, para finalizar el bloque y el programa nos encontramos con el comando que nos cerrara la conexion con  el cliente y nos mostrara por terminal/monitor que el cliente a sido desconectado, aunque este nunca se llegue a ejecutar a no ser que matemos al programa a través de la terminal/monitor con control c.
 ```
 void loop() {
 
-  // Change screen every 15 seconds (timerDelay variable)
+  // Change screen every 7.5 seconds (timerDelay variable)
   if ((millis() - lastTimer) > timerDelay) {
     updateScreen();
     Serial.println(displayScreenNum);
@@ -856,7 +672,7 @@ void loop() {
         Serial.write(c);                    // imprime ese byte en el monitor serial
         header += c;
         if (c == '\n') {                    // si el byte es un caracter de salto de linea
-          // si la nueva linea esta en blanco significa que es el fin del 
+          // si la nueva linea est谩 en blanco significa que es el fin del 
           // HTTP request del cliente, entonces respondemos:
           if (currentLine.length() == 0) {
             client.println("HTTP/1.1 200 OK");
@@ -864,7 +680,7 @@ void loop() {
             client.println("Connection: close");
             client.println();
           
-            // Muestra la pagina web
+            // Muestra la p谩gina web
             float temperature = bme.readTemperature();
             float humidity = bme.readHumidity();
             float pressure = bme.readPressure()/100.0F;
