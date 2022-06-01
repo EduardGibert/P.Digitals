@@ -1,4 +1,4 @@
-# PROYECTO FINAL: Estación meteorologica
+# Proyecto Final: 
 ## Código completo:
 ```
 #include <Arduino.h>
@@ -72,16 +72,11 @@ TwoWire I2Cdisplay = TwoWire(1);
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &I2Cdisplay, -1);
 
-// WS2812B Addressable RGB LEDs
-#define LED_PIN    27  // GPIO the LEDs are connected to
-#define LED_COUNT  12  // Number of LEDs
-Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
-
 // BME280
 #define I2C_SDA 21
 #define I2C_SCL 22
 TwoWire I2CBME = TwoWire(0);
-Adafruit_BME280 bme;       
+Adafruit_BME280 bme;
 
 // Screens
 int displayScreenNum = 0;
@@ -90,25 +85,6 @@ int displayScreenNumMax = 3;
 unsigned long lastTimer = 0;
 unsigned long timerDelay = 7500; 
 
-// Clear the LEDs
-void colorWipe(uint32_t color, int wait, int numNeoPixels) {
-  for(int i=0; i<numNeoPixels; i++) { // For each pixel in strip...
-    strip.setPixelColor(i, color);         //  Set pixel's color (in RAM)
-    strip.show();                          //  Update strip to match
-    delay(wait);                           //  Pause for a moment
-  }
-}
-
-// Rainbow cycle along all LEDs. Pass delay time (in ms) between frames.
-void rainbow(int wait) {
-  long firstPixelHue = 256;
-    for(int i=0; i<strip.numPixels(); i++) { // For each pixel in strip...
-      int pixelHue = firstPixelHue + (i * 65536L / strip.numPixels());
-      strip.setPixelColor(i, strip.gamma32(strip.ColorHSV(pixelHue)));
-    }
-    strip.show(); // Update strip with new contents
-    delay(wait);  // Pause for a moment
-}
 
 // Create display marker for each screen
 void displayIndicator(int displayNumber) {
@@ -176,7 +152,6 @@ void displayLocalTime(){
   display.print(year);
   displayIndicator(displayScreenNum);
   display.display();
-  rainbow(10);
 }
 
 // SCREEN NUMBER 1: TEMPERATURE
@@ -200,8 +175,6 @@ void displayTemperature(){
   display.setTextSize(1);
   displayIndicator(displayScreenNum);
   display.display();
-  int temperaturePer = map(temperature, -5, 36, 0, LED_COUNT-1);
-  colorWipe(strip.Color(0,   255,   0), 50, temperaturePer);
 }
 
 // SCREEN NUMBER 2: HUMIDITY
@@ -221,8 +194,6 @@ void displayHumidity(){
   display.setTextSize(1);
   displayIndicator(displayScreenNum);
   display.display();
-  int humidityPer = map(humidity, 0, 100, 0, LED_COUNT-1);
-  colorWipe(strip.Color(0,   0,   255), 50, humidityPer);
 }
 
 // SCREEN NUMBER 3: PRESSURE
@@ -240,12 +211,10 @@ void displayPressure(){
   display.setTextSize(1);
   displayIndicator(displayScreenNum);
   display.display();
-  colorWipe(strip.Color(255,   0,   255), 50, 12);
 }
 
 // Display the right screen accordingly to the displayScreenNum
 void updateScreen() {
-  colorWipe(strip.Color(0, 0, 0), 1, LED_COUNT);
   if (displayScreenNum == 0){
     displayLocalTime();
   }
@@ -280,11 +249,6 @@ void setup() {
     Serial.println("Could not find a valid BME280 sensor, check wiring!");
     while (1);
   }
-  
-  // Initialize WS2812B LEDs
-  strip.begin();           // INITIALIZE NeoPixel strip object (REQUIRED)
-  strip.show();            // Turn OFF all pixels ASAP
-  strip.setBrightness(50); // Set BRIGHTNESS to about 1/5 (max = 255)
 
   // Connect to Wi-Fi
   Serial.print("Connecting to ");
@@ -427,21 +391,21 @@ String paginaFin =
 "</body>"
 "</html>";
 ```
+Ahora, definiremos varias variables que serviran para tener la hora correctamente ya que solicitamos la hora de un servidor NTP, asignamos la hora a GTM y finalmente vemos a cuanto corresponde en horario de España. Lo cual nos dice que 2h son 7200 segundos.
 
-A contirnuación, debemos definiremos tres variables con las que tendremos que configurar y obtener la hora de un servidor NTP. La primera es para solicitar la hora de uno de los servidores NTP, la segunda para asignar el desplazamiento GTM el cual define el desplazamiento en segundos de la zona horaria, y finalmente la tercera define el desplazamiento en segundos para el horario de verano en España, en este caso corresponde a dos horas que son 7200 segundos.
 ```
 const char* ntpServer = "pool.ntp.org";
 const long  gmtOffset_sec = 0;
-const int   daylightOffset_sec = 3600;
+const int   daylightOffset_sec = 7200;
 ```
 
-Seguidamente definimos las dimensiones de la pantalla OLED en píxeles (en este caso nuestra pantalla es de 0,96):
+A continuacion definimos las medidas de nuestro display:
 ```
-#define SCREEN_WIDTH 128  
-#define SCREEN_HEIGHT 64  
+#define SCREEN_WIDTH 128  // OLED display width, in pixels
+#define SCREEN_HEIGHT 64  // OLED display height, in pixels
 ```
 
-Asignamos los pines que vamos a usar para conectar el dispositivo I2C:
+Ahora ssignamos los pines para  el dispositivo I2C:
 - SDA --> GPIO 22
 - SCL --> GPIO 21
 ```
@@ -450,7 +414,7 @@ Asignamos los pines que vamos a usar para conectar el dispositivo I2C:
 TwoWire I2Cdisplay = TwoWire(1);
 ```
 
-Inicializamos un monitor con las medidas definidas anteriorments con un protocolo de communicación I2C (&I2Cdisplay):
+Inicializamos un monitor con un protocolo de communicación I2C:
 ```
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &I2Cdisplay, -1);
 ```
@@ -465,6 +429,7 @@ Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
 Asignamos los pines que vamos a usar para conectar el dispositivo I2C:
 - SDA --> GPIO 22
 - SCL --> GPIO 21
+
 También creamos un objeto que llamaremos bme con el Adafruit_BME280 con los pines predeterminados:
 ```
 #define I2C_SDA 21
