@@ -1,4 +1,4 @@
-# Practica 7 Part1 
+# Practica 7 Part 1 
 
 ## Codigo:
 ```
