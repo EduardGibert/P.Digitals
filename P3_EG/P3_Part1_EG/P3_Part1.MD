@@ -120,4 +120,4 @@ server.send(200, "text/html", HTML);
 
 Una vez lo tenemos todo hay que subir el código a la placa, y nos dara la IP de nuestro ordenador:
 
-Esta IP al ponerla en el buscador de un dispositivo conectado a la misma red Wi-Fi y  nos llevara a la página web que hemos creado.
+Esta IP al ponerla en el buscador de un dispositivo conectado a la misma red Wi-Fi nos llevara a la página web que hemos creado.
