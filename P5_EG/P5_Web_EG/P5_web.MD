@@ -2,172 +2,184 @@
 ### Código:
 
 ```
-#include <Arduino.h>
+/*********
+  Rui Santos
+  Complete project details at https://randomnerdtutorials.com  
+*********/
 
-void init_temp_hum_task(void);
-
-// For a connection via I2C using the Arduino Wire include:
-#include <Wire.h>               // Only needed for Arduino 1.6.5 and earlier
-#include "SSD1306Wire.h"        // legacy: #include "SSD1306.h"
-// OR #include "SH1106Wire.h"   // legacy: #include "SH1106.h"
-
-// For a connection via I2C using brzo_i2c (must be installed) include:
-// #include <brzo_i2c.h>        // Only needed for Arduino 1.6.5 and earlier
-// #include "SSD1306Brzo.h"
-// OR #include "SH1106Brzo.h"
-
-// For a connection via SPI include:
-// #include <SPI.h>             // Only needed for Arduino 1.6.5 and earlier
-// #include "SSD1306Spi.h"
-// OR #include "SH1106SPi.h"
-
-
-// Optionally include custom images
-#include "images.h"
-
+// Import required libraries
+#include "WiFi.h"
+#include "ESPAsyncWebServer.h"
+#include <Adafruit_Sensor.h>
 #include "SparkFunHTU21D.h"
+#include <Wire.h> 
+#include "SSD1306Wire.h" 
 
-//Create an instance of the object
+// Replace with your network credentials
+const char* ssid = "Xiaomi_11T_Pro";
+const char* password = "f5cbd8a82232";
+
+     // Digital pin connected to the DHT sensor
+
+// Uncomment the type of sensor in use:
+//#define DHTTYPE    DHT11     // DHT 11     // DHT 22 (AM2302)
+//#define DHTTYPE    DHT21     // DHT 21 (AM2301)
+
+float temp = 0;
+float humd = 0;
+
+
 HTU21D myHumidity;
 
+SSD1306Wire display(0x3c, SDA, SCL); 
 
+// Create AsyncWebServer object on port 80
+AsyncWebServer server(80);
 
-// Initialize the OLED display using Arduino Wire:
-SSD1306Wire display(0x3c, SDA, SCL);   // ADDRESS, SDA, SCL  -  SDA and SCL usually populate automatically based on your board's pins_arduino.h e.g. https://github.com/esp8266/Arduino/blob/master/variants/nodemcu/pins_arduino.h
-// SSD1306Wire display(0x3c, D3, D5);  // ADDRESS, SDA, SCL  -  If not, they can be specified manually.
-// SSD1306Wire display(0x3c, SDA, SCL, GEOMETRY_128_32);  // ADDRESS, SDA, SCL, OLEDDISPLAY_GEOMETRY  -  Extra param required for 128x32 displays.
-// SH1106Wire display(0x3c, SDA, SCL);     // ADDRESS, SDA, SCL
+String readmyHumiditytemperature() {
+  // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
+  // Read temperature as Celsius (the default)
+  float t = temp;
+  // Read temperature as Fahrenheit (isFahrenheit = true)
+  //float t = dht.readTemperature(true);
+  // Check if any reads failed and exit early (to try again).
+  if (isnan(t)) {    
+    Serial.println("Failed to read from DHT sensor!");
+    return "--";
+  }
+  else {
+    Serial.println(t);
+    return String(t);
+  }
+}
 
-// Initialize the OLED display using brzo_i2c:
-// SSD1306Brzo display(0x3c, D3, D5);  // ADDRESS, SDA, SCL
-// or
-// SH1106Brzo display(0x3c, D3, D5);   // ADDRESS, SDA, SCL
+String readmyHumidityHumidity() {
+  // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
+  float h = humd;
+  if (isnan(h)) {
+    Serial.println("Failed to read from DHT sensor!");
+    return "--";
+  }
+  else {
+    Serial.println(h);
+    return String(h);
+  }
+}
 
-// Initialize the OLED display using SPI:
-// D5 -> CLK
-// D7 -> MOSI (DOUT)
-// D0 -> RES
-// D2 -> DC
-// D8 -> CS
-// SSD1306Spi display(D0, D2, D8);  // RES, DC, CS
-// or
-// SH1106Spi display(D0, D2);       // RES, DC
+const char index_html[] PROGMEM = R"rawliteral(
+<!DOCTYPE HTML><html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+  <style>
+    html {
+     font-family: Arial;
+     display: inline-block;
+     margin: 0px auto;
+     text-align: center;
+    }
+    h2 { font-size: 3.0rem; }
+    p { font-size: 3.0rem; }
+    .units { font-size: 1.2rem; }
+    .dht-labels{
+      font-size: 1.5rem;
+      vertical-align:middle;
+      padding-bottom: 15px;
+    }
+  </style>
+</head>
+<body>
+  <h2>ESP32 DHT Server</h2>
+  <p>
+    <i class="fas fa-thermometer-half" style="color:#059e8a;"></i> 
+    <span class="dht-labels">Temperature</span> 
+    <span id="temperature">%TEMPERATURE%</span>
+    <sup class="units">&deg;C</sup>
+  </p>
+  <p>
+    <i class="fas fa-tint" style="color:#00add6;"></i> 
+    <span class="dht-labels">Humidity</span>
+    <span id="humidity">%HUMIDITY%</span>
+    <sup class="units">&percnt;</sup>
+  </p>
+</body>
+<script>
+setInterval(function ( ) {
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      document.getElementById("temperature").innerHTML = this.responseText;
+    }
+  };
+  xhttp.open("GET", "/temperature", true);
+  xhttp.send();
+}, 10000 ) ;
 
+setInterval(function ( ) {
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      document.getElementById("humidity").innerHTML = this.responseText;
+    }
+  };
+  xhttp.open("GET", "/humidity", true);
+  xhttp.send();
+}, 10000 ) ;
+</script>
+</html>)rawliteral";
 
-#define DEMO_DURATION 3000
-typedef void (*Demo)(void);
+// Replaces placeholder with DHT values
+String processor(const String& var){
+  //Serial.println(var);
+  if(var == "TEMPERATURE"){
+    return readmyHumiditytemperature();
+  }
+  else if(var == "HUMIDITY"){
+    return readmyHumidityHumidity();
+  }
+  return String();
+}
 
-int demoMode = 0;
-int counter = 1;
+void setup(){
 
-void setup() {
-  Serial.begin(115200);
-  Serial.println();
-  Serial.println();
-
-   Serial.println("HTU21D Example!");
-
-   myHumidity.begin();
-//}
-
-  //init_temp_hum_task();
-  // Initialising the UI will init the display too.
   display.init();
 
   display.flipScreenVertically();
   display.setFont(ArialMT_Plain_10);
 
-}
+  // Serial port for debugging purposes
+  Serial.begin(115200);
 
-void drawFontFaceDemo() {
-  // Font Demo1
-  // create more fonts at http://oleddisplay.squix.ch/
-  display.setTextAlignment(TEXT_ALIGN_LEFT);
-  display.setFont(ArialMT_Plain_10);
-  display.drawString(0, 0, "Hello world");
-  display.setFont(ArialMT_Plain_16);
-  display.drawString(0, 10, "Hello world");
-  display.setFont(ArialMT_Plain_24);
-  display.drawString(0, 26, "Hello world");
-}
-
-void drawTextFlowDemo() {
-  display.setFont(ArialMT_Plain_10);
-  display.setTextAlignment(TEXT_ALIGN_LEFT);
-  display.drawStringMaxWidth(0, 0, 128,
-                             "Lorem ipsum\n dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore." );
-}
-
-void drawTextAlignmentDemo() {
-  // Text alignment demo
-  display.setFont(ArialMT_Plain_10);
-
-  // The coordinates define the left starting point of the text
-  display.setTextAlignment(TEXT_ALIGN_LEFT);
-  display.drawString(0, 10, "Left aligned (0,10)");
-
-  // The coordinates define the center of the text
-  display.setTextAlignment(TEXT_ALIGN_CENTER);
-  display.drawString(64, 22, "Center aligned (64,22)");
-
-  // The coordinates define the right end of the text
-  display.setTextAlignment(TEXT_ALIGN_RIGHT);
-  display.drawString(128, 33, "Right aligned (128,33)");
-}
-
-void drawRectDemo() {
-  // Draw a pixel at given position
-  for (int i = 0; i < 10; i++) {
-    display.setPixel(i, i);
-    display.setPixel(10 - i, i);
+  myHumidity.begin();
+  
+  // Connect to Wi-Fi
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.println("Connecting to WiFi..");
   }
-  display.drawRect(12, 12, 20, 20);
 
-  // Fill the rectangle
-  display.fillRect(14, 14, 17, 17);
+  // Print ESP32 Local IP Address
+  Serial.println(WiFi.localIP());
 
-  // Draw a line horizontally
-  display.drawHorizontalLine(0, 40, 20);
+  // Route for root / web page
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send_P(200, "text/html", index_html, processor);
+  });
+  server.on("/temperature", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send_P(200, "text/plain", readmyHumiditytemperature().c_str());
+  });
+  server.on("/humidity", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send_P(200, "text/plain", readmyHumidityHumidity().c_str());
+  });
 
-  // Draw a line horizontally
-  display.drawVerticalLine(40, 0, 20);
+  // Start server
+  server.begin();
 }
-
-void drawCircleDemo() {
-  for (int i = 1; i < 8; i++) {
-    display.setColor(WHITE);
-    display.drawCircle(32, 32, i * 3);
-    if (i % 2 == 0) {
-      display.setColor(BLACK);
-    }
-    display.fillCircle(96, 32, 32 - i * 3);
-  }
-}
-
-void drawProgressBarDemo() {
-  int progress = (counter / 5) % 100;
-  // draw the progress bar
-  display.drawProgressBar(0, 32, 120, 10, progress);
-
-  // draw the percentage as String
-  display.setTextAlignment(TEXT_ALIGN_CENTER);
-  display.drawString(64, 15, String(progress) + "%");
-}
-
-void drawImageDemo() {
-  // see http://blog.squix.org/2015/05/esp8266-nodemcu-how-to-create-xbm.html
-  // on how to create xbm files
-  display.drawXbm(34, 14, WiFi_Logo_width, WiFi_Logo_height, WiFi_Logo_bits);
-}
-
-Demo demos[] = {drawFontFaceDemo, drawTextFlowDemo, drawTextAlignmentDemo, drawRectDemo, drawCircleDemo, drawProgressBarDemo, drawImageDemo};
-int demoLength = (sizeof(demos) / sizeof(Demo));
-long timeSinceLastModeSwitch = 0;
-
-void loop() {
-
-  float humd = myHumidity.readHumidity();
-  float temp = myHumidity.readTemperature();
+ 
+void loop(){
+humd = myHumidity.readHumidity();
+   temp = myHumidity.readTemperature();
 
   Serial.print("Time:");
   Serial.print(millis());
@@ -212,251 +224,106 @@ void loop() {
   
   delay(100);
 }
-
-
 ```
 
 ### Salida:
-Una vez subido el codigo a la ESP32, el dispositivo, muestra dos cosas: 
-#### Pantalla:
-Por la pantalla del ordenador muestra el tiempo que lleva en funcionamiento, la lectura de la temperatura actual y la lectura de la humedad actual, las quales son captadas usando un sensor de temperatura y humedad.
+En este caso se parace mucho al apartado del display, solo que esta vez se implementa un paso mas usando la conexion Wi-Fi de la placa ESP32, ya que esta vez las lecturas tambien saldran por una pagina web.
+
+Por lo tanto se nos muestra lo siguiente
+: 
+#### Web:
+Por pantalla se nos dara una IP en la cual tendremos que acceder con un dispositivo conectado a esta misma red, esto hara que podamos ver estas lecturas sin al necesidad de un display.
+
 #### Display:
 Por el display muestra ambas lecturas de temperatura y humedad de manera comoda y organizada como se ve en el siguiente video.
 
+En el siguiente video vemos el funcionamiento de la pagina Web:
 
 
 
-https://user-images.githubusercontent.com/100867309/171381156-48ad0ec6-ec2e-45cd-b8c0-61bd8b0ca546.mp4
+
+https://user-images.githubusercontent.com/100867309/171384964-9294a8af-5554-4500-a035-f13621edd993.mp4
+
+
 
 
 ### Montaje:
-
+El montaje es el mismo pero aun asi lo mostramos otra vez para que no haya confusiones:
 ![](p5mont.jpeg)
 
 
 ### Aclaraciones del código:
 
-Para las aclaraciones vamos a separar el codigo en varios apartados de manera que sea mas facil de comprender, para empezar tenemos que definir todas las librerias que sean necessarias, definir variables, etc... es decir hay que inicializar el codigo:
+En este caso como ya hemos dicho la mayor parte del codigo es similar a la anterior ya que el display es el mismo, aun asi la parte de la web es la que hay que tener en cuenta, ya esta hecha en HTML como se puede ver a continuacion;
 ```
-#include <Arduino.h>
-
-void init_temp_hum_task(void);
-
-// For a connection via I2C using the Arduino Wire include:
-#include <Wire.h>               // Only needed for Arduino 1.6.5 and earlier
-#include "SSD1306Wire.h"        // legacy: #include "SSD1306.h"
-// OR #include "SH1106Wire.h"   // legacy: #include "SH1106.h"
-
-// For a connection via I2C using brzo_i2c (must be installed) include:
-// #include <brzo_i2c.h>        // Only needed for Arduino 1.6.5 and earlier
-// #include "SSD1306Brzo.h"
-// OR #include "SH1106Brzo.h"
-
-// For a connection via SPI include:
-// #include <SPI.h>             // Only needed for Arduino 1.6.5 and earlier
-// #include "SSD1306Spi.h"
-// OR #include "SH1106SPi.h"
-
-
-// Optionally include custom images
-#include "images.h"
-
-#include "SparkFunHTU21D.h"
-
-//Create an instance of the object
-HTU21D myHumidity;
-
-
-
-// Initialize the OLED display using Arduino Wire:
-SSD1306Wire display(0x3c, SDA, SCL);   // ADDRESS, SDA, SCL  -  SDA and SCL usually populate automatically based on your board's pins_arduino.h e.g. https://github.com/esp8266/Arduino/blob/master/variants/nodemcu/pins_arduino.h
-// SSD1306Wire display(0x3c, D3, D5);  // ADDRESS, SDA, SCL  -  If not, they can be specified manually.
-// SSD1306Wire display(0x3c, SDA, SCL, GEOMETRY_128_32);  // ADDRESS, SDA, SCL, OLEDDISPLAY_GEOMETRY  -  Extra param required for 128x32 displays.
-// SH1106Wire display(0x3c, SDA, SCL);     // ADDRESS, SDA, SCL
-
-// Initialize the OLED display using brzo_i2c:
-// SSD1306Brzo display(0x3c, D3, D5);  // ADDRESS, SDA, SCL
-// or
-// SH1106Brzo display(0x3c, D3, D5);   // ADDRESS, SDA, SCL
-
-// Initialize the OLED display using SPI:
-// D5 -> CLK
-// D7 -> MOSI (DOUT)
-// D0 -> RES
-// D2 -> DC
-// D8 -> CS
-// SSD1306Spi display(D0, D2, D8);  // RES, DC, CS
-// or
-// SH1106Spi display(D0, D2);       // RES, DC
-
-
-#define DEMO_DURATION 3000
-typedef void (*Demo)(void);
-
-int demoMode = 0;
-int counter = 1;
-```
-
-Una vez hecho esto, podemos empezar a darle forma, comenzamos por el setup, el cual se va a encargar de hacer unos prints y inicializar el display para poder usarlo posteriormente.
-```
-void setup() {
-  Serial.begin(115200);
-  Serial.println();
-  Serial.println();
-
-   Serial.println("HTU21D Example!");
-
-   myHumidity.begin();
-//}
-
-  //init_temp_hum_task();
-  // Initialising the UI will init the display too.
-  display.init();
-
-  display.flipScreenVertically();
-  display.setFont(ArialMT_Plain_10);
-
-}
-```
-Seguidamente vienen voids que definen varias cosas dentro del display, entre ellas las coordenadas, y muchas otras que no se usan pero se podrian como la implementacion de imagenes, etc... Pero siempre hay que tener en cuenta que display usamos ya que el nuestro por ejemplo es monocromatico de manera que no se pueden implementar colores en este, solo blanco y negro.
-```
-void drawFontFaceDemo() {
-  // Font Demo1
-  // create more fonts at http://oleddisplay.squix.ch/
-  display.setTextAlignment(TEXT_ALIGN_LEFT);
-  display.setFont(ArialMT_Plain_10);
-  display.drawString(0, 0, "Hello world");
-  display.setFont(ArialMT_Plain_16);
-  display.drawString(0, 10, "Hello world");
-  display.setFont(ArialMT_Plain_24);
-  display.drawString(0, 26, "Hello world");
-}
-
-void drawTextFlowDemo() {
-  display.setFont(ArialMT_Plain_10);
-  display.setTextAlignment(TEXT_ALIGN_LEFT);
-  display.drawStringMaxWidth(0, 0, 128,
-                             "Lorem ipsum\n dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore." );
-}
-
-void drawTextAlignmentDemo() {
-  // Text alignment demo
-  display.setFont(ArialMT_Plain_10);
-
-  // The coordinates define the left starting point of the text
-  display.setTextAlignment(TEXT_ALIGN_LEFT);
-  display.drawString(0, 10, "Left aligned (0,10)");
-
-  // The coordinates define the center of the text
-  display.setTextAlignment(TEXT_ALIGN_CENTER);
-  display.drawString(64, 22, "Center aligned (64,22)");
-
-  // The coordinates define the right end of the text
-  display.setTextAlignment(TEXT_ALIGN_RIGHT);
-  display.drawString(128, 33, "Right aligned (128,33)");
-}
-
-void drawRectDemo() {
-  // Draw a pixel at given position
-  for (int i = 0; i < 10; i++) {
-    display.setPixel(i, i);
-    display.setPixel(10 - i, i);
-  }
-  display.drawRect(12, 12, 20, 20);
-
-  // Fill the rectangle
-  display.fillRect(14, 14, 17, 17);
-
-  // Draw a line horizontally
-  display.drawHorizontalLine(0, 40, 20);
-
-  // Draw a line horizontally
-  display.drawVerticalLine(40, 0, 20);
-}
-
-void drawCircleDemo() {
-  for (int i = 1; i < 8; i++) {
-    display.setColor(WHITE);
-    display.drawCircle(32, 32, i * 3);
-    if (i % 2 == 0) {
-      display.setColor(BLACK);
+<!DOCTYPE HTML><html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+  <style>
+    html {
+     font-family: Arial;
+     display: inline-block;
+     margin: 0px auto;
+     text-align: center;
     }
-    display.fillCircle(96, 32, 32 - i * 3);
-  }
-}
+    h2 { font-size: 3.0rem; }
+    p { font-size: 3.0rem; }
+    .units { font-size: 1.2rem; }
+    .dht-labels{
+      font-size: 1.5rem;
+      vertical-align:middle;
+      padding-bottom: 15px;
+    }
+  </style>
+</head>
+<body>
+  <h2>ESP32 DHT Server</h2>
+  <p>
+    <i class="fas fa-thermometer-half" style="color:#059e8a;"></i> 
+    <span class="dht-labels">Temperature</span> 
+    <span id="temperature">%TEMPERATURE%</span>
+    <sup class="units">&deg;C</sup>
+  </p>
+  <p>
+    <i class="fas fa-tint" style="color:#00add6;"></i> 
+    <span class="dht-labels">Humidity</span>
+    <span id="humidity">%HUMIDITY%</span>
+    <sup class="units">&percnt;</sup>
+  </p>
+</body>
+<script>
+setInterval(function ( ) {
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      document.getElementById("temperature").innerHTML = this.responseText;
+    }
+  };
+  xhttp.open("GET", "/temperature", true);
+  xhttp.send();
+}, 10000 ) ;
 
-void drawProgressBarDemo() {
-  int progress = (counter / 5) % 100;
-  // draw the progress bar
-  display.drawProgressBar(0, 32, 120, 10, progress);
+setInterval(function ( ) {
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      document.getElementById("humidity").innerHTML = this.responseText;
+    }
+  };
+  xhttp.open("GET", "/humidity", true);
+  xhttp.send();
+}, 10000 ) ;
+</script>
+</html>)rawliteral";
 
-  // draw the percentage as String
-  display.setTextAlignment(TEXT_ALIGN_CENTER);
-  display.drawString(64, 15, String(progress) + "%");
-}
-
-void drawImageDemo() {
-  // see http://blog.squix.org/2015/05/esp8266-nodemcu-how-to-create-xbm.html
-  // on how to create xbm files
-  display.drawXbm(34, 14, WiFi_Logo_width, WiFi_Logo_height, WiFi_Logo_bits);
-}
-
-Demo demos[] = {drawFontFaceDemo, drawTextFlowDemo, drawTextAlignmentDemo, drawRectDemo, drawCircleDemo, drawProgressBarDemo, drawImageDemo};
-int demoLength = (sizeof(demos) / sizeof(Demo));
-long timeSinceLastModeSwitch = 0;
 ```
-Finalmente el loop, el cual se va a encargar de mostrar por el display y pantalla todo lo necessario, temperatura, humedad, el texto, etc...
-
+Tambien tenemos que ver como incializamos la pagina web conectandonos a una red Wi-Fi como se ve al principio del codigo:
 ```
-void loop() {
-
-  float humd = myHumidity.readHumidity();
-  float temp = myHumidity.readTemperature();
-
-  Serial.print("Time:");
-  Serial.print(millis());
-  Serial.print(" Temperature:");
-  Serial.print(temp, 1);
-  Serial.print("C");
-  Serial.print(" Humidity:");
-  Serial.print(humd, 1);
-  Serial.print("%");
-
-  Serial.println();
-
-
-  // clear the display
-  display.clear();
-  // draw the current demo method
-  //demos[demoMode]();
-
-
-  display.setTextAlignment(TEXT_ALIGN_CENTER);
-  display.setFont(ArialMT_Plain_10);
-  display.drawString(128/2, 0, "HUMEDAD");
-  display.setFont(ArialMT_Plain_16);
-  display.drawString(128/2, 11, String(humd)+ "%");
-  display.setFont(ArialMT_Plain_10);
-  display.drawString(128/2, 30, "TEMPERATURA");
-  display.setFont(ArialMT_Plain_16);
-  display.drawString(128/2, 41, String(temp)+ "ºC");
-
-  display.setFont(ArialMT_Plain_10);
-  display.setTextAlignment(TEXT_ALIGN_RIGHT);
-  display.drawString(128, 54, String(millis()/3600000)+String(":")\
-          +String((millis()/60000)%60)+String(":")\
-          +String((millis()/1000)%(60)));
- 
-  
-
-  // write the buffer to the display
-  display.display();
-
-  
-  
-  delay(100);
-}
-
+// Replace with your network credentials
+const char* ssid = "Xiaomi_11T_Pro";
+const char* password = "f5cbd8a82232";
 
 ```
 
+De esta forma conectamos la placa a la red Wi-Fi assignada y ya podriamos ver la pagina web con las lecturas actualizadas constantemente.
