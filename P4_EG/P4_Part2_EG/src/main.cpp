@@ -1,41 +1,56 @@
 #include <Arduino.h>
+#define LED 16
+unsigned long myTime;
+#define interruptPin 0
 
+void Task1(void * parameter);
+void anotherTask(void * parameter);
 
-/* delete a task when finish,
-this will never happen because this is infinity loop */
-
-
-void funcion1(void * parameter)
-{
-#define led 16
-pinMode(led, OUTPUT);
-
-for(;;)
-{
-digitalWrite(led, HIGH);
-Serial.println("ON");
-delay(1000);
-digitalWrite(led, LOW);
-Serial.println("OFF");
-delay(1000);
-
+void setup(){
+  Serial.begin(115200);
+  /* we create a new task here */
+  xTaskCreate(
+  anotherTask, /* Task function. */
+  "another Task", /* name of task. */
+  10000, /* Stack size of task */
+  NULL, /* parameter of the task */
+  1, /* priority of the task */
+  NULL); /* Task handle to keep track of created task */
+  xTaskCreate(
+  Task1, /* Task function. */
+  "Task 1", /* name of task. */
+  10000, /* Stack size of task */
+  NULL, /* parameter of the task */
+  1, /* priority of the task */
+  NULL);
 }
 
+void loop(){
+  Serial.println("this is ESP32 Task");
+  delay(1000);
 }
 
-void setup()
-{
-Serial.begin(112500);
-
-xTaskCreate(
-funcion1, /* Task function. */
-"FUNCION 1", /* name of task. */
-10000, /* Stack size of task */
-NULL, /* parameter of the task */
-1, /* priority of the task */
-NULL); /* Task handle to keep track of created task */
+void anotherTask( void * parameter ){
+  for(;;){
+    Serial.println("this is another Task");
+    delay(1000);
+  }
+  /* delete a task when finish,
+  this will never happen because this is infinity loop */
+  vTaskDelete( NULL );
 }
 
-
-void loop()
-{}
+void Task1(void * parameter){
+  pinMode(LED,OUTPUT);
+  for(;;){
+    Serial.println(myTime); // prints time since program started
+    delay(500);    
+    digitalWrite(LED,HIGH);
+    Serial.println("ON");
+    delay(500);
+    digitalWrite(LED,HIGH);
+    Serial.println("OFF");
+    digitalWrite(LED,LOW);
+    delay(500);
+  }
+}
