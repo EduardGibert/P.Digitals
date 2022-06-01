@@ -251,127 +251,18 @@ void loop() {
 
 ### Salida:
 Una vez subido el codigo a la ESP32, el dispositivo, muestra dos cosas: 
-1- Por la pantalla del ordenador muestra el tiempo que lleva en funcionamiento, la lectura de la temperatura actual y la lectura de la humedad actual, las quales son captadas usando un sensor de temperatura y humedad.
+#### Pantalla:
+Por la pantalla del ordenador muestra el tiempo que lleva en funcionamiento, la lectura de la temperatura actual y la lectura de la humedad actual, las quales son captadas usando un sensor de temperatura y humedad.
+#### Display:
+Por el display muestra ambas lecturas de temperatura y humedad de manera comoda y organizada como se ve en el siguiente video.
 
-![alt text](Captura.JPG)
 
 
-## PRÁCTICA 5B (display):
-### Fotos del montaje:
-GND -> GND
-VCC -> 3,3V
-SCL -> G22
-SDA -> G21
 
-![alt text](MONTAJE.jpeg)
+https://user-images.githubusercontent.com/100867309/171381156-48ad0ec6-ec2e-45cd-b8c0-61bd8b0ca546.mp4
 
-### Salidas de depuracion:
-Al ejecutar el programa el display muestra en su pantalla el mensaje de "Hola mundo".
 
-![alt text](display.jpeg)
+### Montaje:
 
-### Código generado:
-```
-#include "Adafruit_I2CDevice.h"
-#include <Wire.h>
-#include <Adafruit_GFX.h>
-#include <Adafruit_SSD1306.h>
-#include <Fonts/FreeSerif9pt7b.h>
 
-#define SCREEN_WIDTH 128 // OLED display width, in pixels
-#define SCREEN_HEIGHT 64 // OLED display height, in pixels
 
-// Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
-Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
-
-void setup() {
-  Serial.begin(115200);
-
-  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { 
-    Serial.println("SSD1306 allocation failed");
-    for(;;);
-  }
-  delay(2000);
-
-  delay(2000);
-  display.clearDisplay();
-
-  display.setTextSize(1);
-  display.setTextColor(WHITE);
-  display.setCursor(0, 10);
-  // Display static text
-  display.println("Hello, world!");
-  display.display();  
-}
-
-void loop(){
-}
-```
-### Explicación del código:
-Para poder ejecutar primeramente necesitamos incororar las librerias que necesitas el dispositivo:
-```
-#include "Adafruit_I2CDevice.h"
-#include <Wire.h>
-#include <Adafruit_GFX.h>
-#include <Adafruit_SSD1306.h>
-#include <Fonts/FreeSerif9pt7b.h>
-```
-
-Definimos el ancho y la altura en nuestro caso de 128x64:
-```
-#define SCREEN_WIDTH 128 // OLED display width, in pixels
-#define SCREEN_HEIGHT 64 // OLED display height, in pixels
-```
-
-Inicializamos el objeto de visualización con el ancho y alto definidos anteriormente con el protocolo de comunicación I2C (&Wire):
-```
-Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
-```
-
-Inicializamos el Serial Monitor a una velocidad en baudios de 115200 para depurar:
-```
-Serial.begin(115200);
-```
-
-Inicializamos la pantala OLED, donde primeramente hacemos que muestre un mensaje que se mostrara por pantalla en el caso de que no nos podamos conectar a la pantalla.
-```
-if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { 
-    Serial.println("SSD1306 allocation failed");
-    for(;;);
-  }
-```
-
-Después de inicializar la pantalla, añadimos un retraso de dos segundos, para que el OLED tenga tiempo suficiente para inicializarse antes de escribir el texto:
-```
-delay(2000);
-```
-
-Después de inicializar la pantalla, borre el búfer de pantalla con el clearDisplay () método:
-```
- display.clearDisplay();
-```
-
-Establecemos el tamño de la fuente:
-```
-display.setTextSize(1);
-```
-
-Definimos el color de la fuente:
-```
-display.setTextColor(WHITE);
-```
-
-Defina la posición donde comienza el texto:
-```
-display.setCursor(0, 10);
-```
-
-Finalmente, enviamos el texto a la pantalla:
-```
-display.println("Hello, world!");
-```
-
-Llamamos al "monitor()" método para mostrar realmente el texto en la pantalla:
-```
-display.display();
-```
