@@ -5,41 +5,43 @@
 ```
 #include <Arduino.h>
 
-void anotherTask( void * parameter );
+void anotherTask( void * parameter )
+{
+/* loop forever */
+for(;;)
+{
+Serial.println("this is another Task");
+delay(1000);
+}
+
+/* delete a task when finish,
+this will never happen because this is infinity loop */
+vTaskDelete( NULL );
+}
+
 void setup()
 {
-    Serial.begin(115200);
-    /* we create a new task here */
-    xTaskCreate(anotherTask, "another Task", 10000, NULL, 1, NULL); /* Task handle to keep track of created task */
+Serial.begin(112500);
+/* we create a new task here */
+xTaskCreate(
+anotherTask, /* Task function. */
+"another Task", /* name of task. */
+10000, /* Stack size of task */
+NULL, /* parameter of the task */
+1, /* priority of the task */
+NULL); /* Task handle to keep track of created task */
 }
- 
 /* the forever loop() function is invoked by Arduino ESP32 loopTask */
 void loop()
 {
-    Serial.println("this is ESP32 Task");
-    delay(1000);
-}
- 
-/* this function will be invoked when additionalTask was created */
-void anotherTask( void * parameter )
-{
-    /* loop forever */
-    for(;;)
-    {
-        Serial.println("this is another Task");
-        delay(1000);
-    }
-    /* delete a task when finish,
-    this will never happen because this is infinity loop */
-    vTaskDelete( NULL );
+Serial.println("this is ESP32 Task");
+delay(1000);
 }
 ```
-## Salida por el puerto serie:
-Después de compilar y subir el código a la ESP32, hace que al monitorearlo se muestre por pantalla dos mensajes que se muestran  a la vez. Uno se muestra des de el loop del programa y el otro se muestra mmediante el uso de una tasca. Las dos se muestran a la vez ya que en los dos, en este caso se usan como bucles infinitos al no tener ningun tipo de código que haga que tengan un final de bucle.
+## Salida:
+Cuando subimos el código a la ESP32, este hace que salgan por pantalla dos mensajes a la vez. Uno se muestra des de el loop y el otro se muestra con el uso de una tasca. Las dos se muestran a la vez ya que los dos usan loops infinitos, de manera que como no hay ningun tipo de "stop" estos mensajes apareceran hasta que se termine el programa.
 
-Mensaje por pantalla:
-
-![alt text](pantalla.JPG)
+![](p4part1.JPG)
 
 ## Funcionameniento:
 Para crear el código de este programa hemos utilzado las tascas. Primeramente es necesario crear la tasca, eso lo haremos dentro del void setup():
