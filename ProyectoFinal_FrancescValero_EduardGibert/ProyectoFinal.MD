@@ -713,7 +713,7 @@ En las siguientes imagenes mostramos lo que sale en cada una de las pantallas de
 ![](fecha.jpeg)
 ![](temperatura.jpeg)
 ![](humedad.jpeg)
-![](presion.jpeg)
+![](Presion.jpeg)
 ![](webtimer.jpeg)
 
 Aqui vemos una imagen de lo que se ve cuando el programa funciona y nos da una IP en la terminal:
