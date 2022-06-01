@@ -708,16 +708,15 @@ void loop() {
 }
 ```
 
-## Display:
-Mustreos del display (Las cinco pantllayas que se muestran en el display):
-![alt text](d1.jpg)
-![alt text](d2.jpg)
-![alt text](d3.jpg)
-![alt text](d4.jpg)
-![alt text](d5.jpg)
+## Imagenes del display + web:
+En las siguientes imagenes mostramos lo que sale en cada una de las pantallas del display y en la web:
+![](fecha.jpeg)
+![](temperatura.jpeg)
+![](humedad.jpeg)
+![](presion.jpeg)
+![](webtimer.jpeg)
 
-Terminal:
-![alt text](terminal.JPG)
+Aqui vemos una imagen de lo que se ve cuando el programa funciona y nos da una IP en la terminal:
+![](terminal.jpeg)
 
-Página WEB:
-![alt text](web.jpg)
+
