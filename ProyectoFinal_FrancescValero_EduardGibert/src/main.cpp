@@ -80,9 +80,6 @@ Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
 TwoWire I2CBME = TwoWire(0);
 Adafruit_BME280 bme;
 
-// LDR (Light Dependent Resistor)
-#define ldr  33          
-
 // Screens
 int displayScreenNum = 0;
 int displayScreenNumMax = 3;
