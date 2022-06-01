@@ -1,41 +1,54 @@
+#include <Arduino.h>
 #include <SPI.h>
-#include <MFRC522.h>
+#include <SD.h>
 
-#define RST_PIN 21
-#define SS_PIN 5
+File myFile;
 
-MFRC522 mfrc522(SS_PIN, RST_PIN); //Creamos el objeto para el RC522
-void setup() {
-Serial.begin(115200); //Iniciamos la comunicación
-
-SPI.begin();
-//Iniciamos el Bus SPI
-
-mfrc522.PCD_Init(); // Iniciamos el MFRC522
-
-Serial.println("Lectura del UID");
-}
-
-void loop() {
-
-// Revisamos si hay nuevas tarjetas presentes
-if ( mfrc522.PICC_IsNewCardPresent())
+void setup()
 {
-//Seleccionamos una tarjeta
+    Serial.begin(115200);
+    Serial.print("Iniciando SD ...");
+    SPI.begin(18,19,23,5);
 
-if ( mfrc522.PICC_ReadCardSerial())
-{
+    if (!SD.begin(5)) {
+        Serial.println("No se pudo inicializar");
+        return;
+    }
+    Serial.println("inicializacion exitosa");
+    
+    if(!SD.exists("/archivo.txt")){
+            Serial.println("example.txt exists.");
+    }
 
-// Enviamos serialemente su UID
-Serial.print("Card UID:");
-for (byte i = 0; i < mfrc522.uid.size; i++) {
-Serial.print(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " ");
-Serial.print(mfrc522.uid.uidByte[i], HEX);
-}
-Serial.println();
+    else{
+            Serial.println("example.txt no exists.");
+    }
 
-// Terminamos la lectura de la tarjeta actual
-mfrc522.PICC_HaltA();
+    myFile = SD.open("/archivo.txt", FILE_WRITE);
+    myFile.close();
+
+    if (SD.exists("/archivo.txt")){
+
+
+            Serial.println("archivo.txt exists. ");
+    }
+    else{
+            Serial.println("archivo.txt doesn't exist");
+    }
+    myFile = SD.open("/archivo.txt", FILE_WRITE);//abrimos  el archivo 
+    myFile.println("Hola mundo");
+    myFile.close();
+    myFile=SD.open("/archivo.txt");
+    if (myFile) {
+        Serial.println("archivo.txt:");
+        while (myFile.available()) {
+            Serial.write(myFile.read());
+        }
+        myFile.close(); //cerramos el archivo
+    } else {
+        Serial.println("Error al abrir el archivo");
+    }
 }
-}
-}
+
+void loop()
+{}
