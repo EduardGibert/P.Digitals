@@ -3,126 +3,255 @@
 
 ```
 #include <Arduino.h>
-#include "I2Cdev.h"
-#include "MPU6050.h"
 
-// Arduino Wire library is required if I2Cdev I2CDEV_ARDUINO_WIRE implementation
-// is used in I2Cdev.h
-#if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
-#include "Wire.h"
-#endif
-
-// class default I2C address is 0x68
-// specific I2C addresses may be passed as a parameter here
-// AD0 low = 0x68 (default for InvenSense evaluation board)
-// AD0 high = 0x69
-MPU6050 accelgyro;
-//MPU6050 accelgyro(0x69); // <-- use for AD0 high
-
-int16_t ax, ay, az;
-int16_t gx, gy, gz;
+void init_temp_hum_task(void);
 
 
+/**
+   The MIT License (MIT)
 
-// uncomment "OUTPUT_READABLE_ACCELGYRO" if you want to see a tab-separated
-// list of the accel X/Y/Z and then gyro X/Y/Z values in decimal. Easy to read,
-// not so easy to parse, and slow(er) over UART.
-#define OUTPUT_READABLE_ACCELGYRO
+   Copyright (c) 2018 by ThingPulse, Daniel Eichhorn
+   Copyright (c) 2018 by Fabrice Weinberg
 
-// uncomment "OUTPUT_BINARY_ACCELGYRO" to send all 6 axes of data as 16-bit
-// binary, one right after the other. This is very fast (as fast as possible
-// without compression or data loss), and easy to parse, but impossible to read
-// for a human.
-//#define OUTPUT_BINARY_ACCELGYRO
+   Permission is hereby granted, free of charge, to any person obtaining a copy
+   of this software and associated documentation files (the "Software"), to deal
+   in the Software without restriction, including without limitation the rights
+   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+   copies of the Software, and to permit persons to whom the Software is
+   furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included in all
+   copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+   SOFTWARE.
+
+   ThingPulse invests considerable time and money to develop these open source libraries.
+   Please support us by buying our products (and not the clones) from
+   https://thingpulse.com
+
+*/
+
+// Include the correct display library
+
+// For a connection via I2C using the Arduino Wire include:
+#include <Wire.h>               // Only needed for Arduino 1.6.5 and earlier
+#include "SSD1306Wire.h"        // legacy: #include "SSD1306.h"
+// OR #include "SH1106Wire.h"   // legacy: #include "SH1106.h"
+
+// For a connection via I2C using brzo_i2c (must be installed) include:
+// #include <brzo_i2c.h>        // Only needed for Arduino 1.6.5 and earlier
+// #include "SSD1306Brzo.h"
+// OR #include "SH1106Brzo.h"
+
+// For a connection via SPI include:
+// #include <SPI.h>             // Only needed for Arduino 1.6.5 and earlier
+// #include "SSD1306Spi.h"
+// OR #include "SH1106SPi.h"
 
 
-#define LED_PIN 13
-bool blinkState = false;
+// Optionally include custom images
+#include "images.h"
+
+#include "SparkFunHTU21D.h"
+
+//Create an instance of the object
+HTU21D myHumidity;
+
+
+
+// Initialize the OLED display using Arduino Wire:
+SSD1306Wire display(0x3c, SDA, SCL);   // ADDRESS, SDA, SCL  -  SDA and SCL usually populate automatically based on your board's pins_arduino.h e.g. https://github.com/esp8266/Arduino/blob/master/variants/nodemcu/pins_arduino.h
+// SSD1306Wire display(0x3c, D3, D5);  // ADDRESS, SDA, SCL  -  If not, they can be specified manually.
+// SSD1306Wire display(0x3c, SDA, SCL, GEOMETRY_128_32);  // ADDRESS, SDA, SCL, OLEDDISPLAY_GEOMETRY  -  Extra param required for 128x32 displays.
+// SH1106Wire display(0x3c, SDA, SCL);     // ADDRESS, SDA, SCL
+
+// Initialize the OLED display using brzo_i2c:
+// SSD1306Brzo display(0x3c, D3, D5);  // ADDRESS, SDA, SCL
+// or
+// SH1106Brzo display(0x3c, D3, D5);   // ADDRESS, SDA, SCL
+
+// Initialize the OLED display using SPI:
+// D5 -> CLK
+// D7 -> MOSI (DOUT)
+// D0 -> RES
+// D2 -> DC
+// D8 -> CS
+// SSD1306Spi display(D0, D2, D8);  // RES, DC, CS
+// or
+// SH1106Spi display(D0, D2);       // RES, DC
+
+
+#define DEMO_DURATION 3000
+typedef void (*Demo)(void);
+
+int demoMode = 0;
+int counter = 1;
 
 void setup() {
-    // join I2C bus (I2Cdev library doesn't do this automatically)
-    #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
-        Wire.begin();
-    #elif I2CDEV_IMPLEMENTATION == I2CDEV_BUILTIN_FASTWIRE
-        Fastwire::setup(400, true);
-    #endif
+  Serial.begin(115200);
+  Serial.println();
+  Serial.println();
 
-    // initialize serial communication
-    // (38400 chosen because it works as well at 8MHz as it does at 16MHz, but
-    // it's really up to you depending on your project)
-    Serial.begin(115200);
+   Serial.println("HTU21D Example!");
 
-    // initialize device
-    Serial.println("Initializing I2C devices...");
-    accelgyro.initialize();
+   myHumidity.begin();
+//}
 
-    // verify connection
-    Serial.println("Testing device connections...");
-    Serial.println(accelgyro.testConnection() ? "MPU6050 connection successful" : "MPU6050 connection failed");
+  //init_temp_hum_task();
+  // Initialising the UI will init the display too.
+  display.init();
 
-    // use the code below to change accel/gyro offset values
-    /*
-    Serial.println("Updating internal sensor offsets...");
-    // -76	-2359	1688	0	0	0
-    Serial.print(accelgyro.getXAccelOffset()); Serial.print("\t"); // -76
-    Serial.print(accelgyro.getYAccelOffset()); Serial.print("\t"); // -2359
-    Serial.print(accelgyro.getZAccelOffset()); Serial.print("\t"); // 1688
-    Serial.print(accelgyro.getXGyroOffset()); Serial.print("\t"); // 0
-    Serial.print(accelgyro.getYGyroOffset()); Serial.print("\t"); // 0
-    Serial.print(accelgyro.getZGyroOffset()); Serial.print("\t"); // 0
-    Serial.print("\n");
-    accelgyro.setXGyroOffset(220);
-    accelgyro.setYGyroOffset(76);
-    accelgyro.setZGyroOffset(-85);
-    Serial.print(accelgyro.getXAccelOffset()); Serial.print("\t"); // -76
-    Serial.print(accelgyro.getYAccelOffset()); Serial.print("\t"); // -2359
-    Serial.print(accelgyro.getZAccelOffset()); Serial.print("\t"); // 1688
-    Serial.print(accelgyro.getXGyroOffset()); Serial.print("\t"); // 0
-    Serial.print(accelgyro.getYGyroOffset()); Serial.print("\t"); // 0
-    Serial.print(accelgyro.getZGyroOffset()); Serial.print("\t"); // 0
-    Serial.print("\n");
-    */
+  display.flipScreenVertically();
+  display.setFont(ArialMT_Plain_10);
 
-    // configure Arduino LED pin for output
-    pinMode(LED_PIN, OUTPUT);
 }
+
+void drawFontFaceDemo() {
+  // Font Demo1
+  // create more fonts at http://oleddisplay.squix.ch/
+  display.setTextAlignment(TEXT_ALIGN_LEFT);
+  display.setFont(ArialMT_Plain_10);
+  display.drawString(0, 0, "Hello world");
+  display.setFont(ArialMT_Plain_16);
+  display.drawString(0, 10, "Hello world");
+  display.setFont(ArialMT_Plain_24);
+  display.drawString(0, 26, "Hello world");
+}
+
+void drawTextFlowDemo() {
+  display.setFont(ArialMT_Plain_10);
+  display.setTextAlignment(TEXT_ALIGN_LEFT);
+  display.drawStringMaxWidth(0, 0, 128,
+                             "Lorem ipsum\n dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore." );
+}
+
+void drawTextAlignmentDemo() {
+  // Text alignment demo
+  display.setFont(ArialMT_Plain_10);
+
+  // The coordinates define the left starting point of the text
+  display.setTextAlignment(TEXT_ALIGN_LEFT);
+  display.drawString(0, 10, "Left aligned (0,10)");
+
+  // The coordinates define the center of the text
+  display.setTextAlignment(TEXT_ALIGN_CENTER);
+  display.drawString(64, 22, "Center aligned (64,22)");
+
+  // The coordinates define the right end of the text
+  display.setTextAlignment(TEXT_ALIGN_RIGHT);
+  display.drawString(128, 33, "Right aligned (128,33)");
+}
+
+void drawRectDemo() {
+  // Draw a pixel at given position
+  for (int i = 0; i < 10; i++) {
+    display.setPixel(i, i);
+    display.setPixel(10 - i, i);
+  }
+  display.drawRect(12, 12, 20, 20);
+
+  // Fill the rectangle
+  display.fillRect(14, 14, 17, 17);
+
+  // Draw a line horizontally
+  display.drawHorizontalLine(0, 40, 20);
+
+  // Draw a line horizontally
+  display.drawVerticalLine(40, 0, 20);
+}
+
+void drawCircleDemo() {
+  for (int i = 1; i < 8; i++) {
+    display.setColor(WHITE);
+    display.drawCircle(32, 32, i * 3);
+    if (i % 2 == 0) {
+      display.setColor(BLACK);
+    }
+    display.fillCircle(96, 32, 32 - i * 3);
+  }
+}
+
+void drawProgressBarDemo() {
+  int progress = (counter / 5) % 100;
+  // draw the progress bar
+  display.drawProgressBar(0, 32, 120, 10, progress);
+
+  // draw the percentage as String
+  display.setTextAlignment(TEXT_ALIGN_CENTER);
+  display.drawString(64, 15, String(progress) + "%");
+}
+
+void drawImageDemo() {
+  // see http://blog.squix.org/2015/05/esp8266-nodemcu-how-to-create-xbm.html
+  // on how to create xbm files
+  display.drawXbm(34, 14, WiFi_Logo_width, WiFi_Logo_height, WiFi_Logo_bits);
+}
+
+Demo demos[] = {drawFontFaceDemo, drawTextFlowDemo, drawTextAlignmentDemo, drawRectDemo, drawCircleDemo, drawProgressBarDemo, drawImageDemo};
+int demoLength = (sizeof(demos) / sizeof(Demo));
+long timeSinceLastModeSwitch = 0;
 
 void loop() {
-    // read raw accel/gyro measurements from device
-    accelgyro.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
 
-    // these methods (and a few others) are also available
-    //accelgyro.getAcceleration(&ax, &ay, &az);
-    //accelgyro.getRotation(&gx, &gy, &gz);
+  float humd = myHumidity.readHumidity();
+  float temp = myHumidity.readTemperature();
 
-    #ifdef OUTPUT_READABLE_ACCELGYRO
-        // display tab-separated accel/gyro x/y/z values
-        Serial.print("a/g:\t");
-        Serial.print(ax); Serial.print("\t");
-        Serial.print(ay); Serial.print("\t");
-        Serial.print(az); Serial.print("\t");
-        Serial.print(gx); Serial.print("\t");
-        Serial.print(gy); Serial.print("\t");
-        Serial.println(gz);
-    #endif
+  Serial.print("Time:");
+  Serial.print(millis());
+  Serial.print(" Temperature:");
+  Serial.print(temp, 1);
+  Serial.print("C");
+  Serial.print(" Humidity:");
+  Serial.print(humd, 1);
+  Serial.print("%");
 
-    #ifdef OUTPUT_BINARY_ACCELGYRO
-        Serial.write((uint8_t)(ax >> 8)); Serial.write((uint8_t)(ax & 0xFF));
-        Serial.write((uint8_t)(ay >> 8)); Serial.write((uint8_t)(ay & 0xFF));
-        Serial.write((uint8_t)(az >> 8)); Serial.write((uint8_t)(az & 0xFF));
-        Serial.write((uint8_t)(gx >> 8)); Serial.write((uint8_t)(gx & 0xFF));
-        Serial.write((uint8_t)(gy >> 8)); Serial.write((uint8_t)(gy & 0xFF));
-        Serial.write((uint8_t)(gz >> 8)); Serial.write((uint8_t)(gz & 0xFF));
-    #endif
+  Serial.println();
 
-    // blink LED to indicate activity
-    blinkState = !blinkState;
-    digitalWrite(LED_PIN, blinkState);
+
+  // clear the display
+  display.clear();
+  // draw the current demo method
+  //demos[demoMode]();
+
+
+  display.setTextAlignment(TEXT_ALIGN_CENTER);
+  display.setFont(ArialMT_Plain_10);
+  display.drawString(128/2, 0, "HUMEDAD");
+  display.setFont(ArialMT_Plain_16);
+  display.drawString(128/2, 11, String(humd)+ "%");
+  display.setFont(ArialMT_Plain_10);
+  display.drawString(128/2, 30, "TEMPERATURA");
+  display.setFont(ArialMT_Plain_16);
+  display.drawString(128/2, 41, String(temp)+ "ºC");
+
+  display.setFont(ArialMT_Plain_10);
+  display.setTextAlignment(TEXT_ALIGN_RIGHT);
+  display.drawString(128, 54, String(millis()/3600000)+String(":")\
+          +String((millis()/60000)%60)+String(":")\
+          +String((millis()/1000)%(60)));
+ 
+  
+
+  // write the buffer to the display
+  display.display();
+
+  
+  
+  delay(100);
 }
+
+
 ```
 
-### Salida por el puerto serie:
-Despues de compilar el programa y subirlo a la placa, el dispositivo comienza a funcionar. Este dispositivo se capta la aceleracion en el momento que se mueve. Al monitorearlo podemos obeservar como se muestran un seguido de coordenadas, las cuales iran variando respectivanete a medida que vayamos moviendo el sensor indicando hacia la posició a la cual este se mueve.
+### Salida:
+Una vez subido el codigo a la ESP32, el dispositivo, muestra dos cosas: 
+1- Por la pantalla del ordenador muestra el tiempo que lleva en funcionamiento, la lectura de la temperatura actual y la lectura de la humedad actual, las quales son captadas usando un sensor de temperatura y humedad.
 
 ![alt text](Captura.JPG)
 
