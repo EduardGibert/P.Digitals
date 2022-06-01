@@ -11,13 +11,15 @@
 #include <WiFi.h>
 #include <time.h>
 #include "Adafruit_I2CDevice.h"
+#include "ESPAsyncWebServer.h"
+
 
 //------------------Servidor Web en puerto 80---------------------
 WiFiServer server(80);
 
 // Insert your network credentials
-const char* ssid     = "FRITZBox 7530 AA";
-const char* password = "29204458007338454923";
+const char* ssid     = "Telefedu";
+const char* password = "3e6eb1e28071";
 
 //---------------------VARIABLES GLOBALES-------------------------
 int contconexion = 0;
@@ -30,25 +32,26 @@ String paginaInicio = "<!DOCTYPE html>"
 "<head>"
 "<meta charset='utf-8' />"
 "<META HTTP-EQUIV='Refresh' CONTENT='1'>"
-"<title> Datos meteorologicos locales actuales </title>"
+"<title> Informacion Actual </title>"
 "</head>"
 "<body>"
 "<center>"
-"<h2> <u> Datos meteorologicos locales actuales </u> </h2>"
+"<h1> <u> Informacion Actual </u> </h1>"
 "<br>"
 "</center>";
 
+
 String Temperatura = 
-"<h3> <ul> <li> Temperatura: </li> </ul> </h3>"
-"<br>";
+"<h2> <ul> <li> Temperature: </li> </ul> </h2>"
+"<h2><h2>";
 
 String Humedad = 
-"<h3> <ul> <li> Humedad: </li> </ul> </h3>"
-"<br>";
+"<h2> <ul> <li> Humidity: </li> </ul> </h2>"
+"<h2><h2><br>";
 
 String Presion = 
-"<h3> <ul> <li> Presion: </li> </ul> </h3>"
-"<br>";
+"<h2> <ul> <li> Pressure: </li> </ul> </h2>"
+"<h2><h2><br>";
 
 String paginaFin = 
 "</body>"
@@ -78,93 +81,14 @@ Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
 #define I2C_SDA 21
 #define I2C_SCL 22
 TwoWire I2CBME = TwoWire(0);
-Adafruit_BME280 bme;
-
-// LDR (Light Dependent Resistor)
-#define ldr  33          
+Adafruit_BME280 bme;       
 
 // Screens
 int displayScreenNum = 0;
-int displayScreenNumMax = 4;
+int displayScreenNumMax = 3;
 
 unsigned long lastTimer = 0;
-unsigned long timerDelay = 15000; 
-
-unsigned char temperature_icon[] ={
-  0b00000001, 0b11000000, //        ###      
-  0b00000011, 0b11100000, //       #####     
-  0b00000111, 0b00100000, //      ###  #     
-  0b00000111, 0b11100000, //      ######     
-  0b00000111, 0b00100000, //      ###  #     
-  0b00000111, 0b11100000, //      ######     
-  0b00000111, 0b00100000, //      ###  #     
-  0b00000111, 0b11100000, //      ######     
-  0b00000111, 0b00100000, //      ###  #     
-  0b00001111, 0b11110000, //     ########    
-  0b00011111, 0b11111000, //    ##########   
-  0b00011111, 0b11111000, //    ##########   
-  0b00011111, 0b11111000, //    ##########   
-  0b00011111, 0b11111000, //    ##########   
-  0b00001111, 0b11110000, //     ########    
-  0b00000111, 0b11100000, //      ######     
-};
-
-unsigned char humidity_icon[] ={
-  0b00000000, 0b00000000, //                 
-  0b00000001, 0b10000000, //        ##       
-  0b00000011, 0b11000000, //       ####      
-  0b00000111, 0b11100000, //      ######     
-  0b00001111, 0b11110000, //     ########    
-  0b00001111, 0b11110000, //     ########    
-  0b00011111, 0b11111000, //    ##########   
-  0b00011111, 0b11011000, //    ####### ##   
-  0b00111111, 0b10011100, //   #######  ###  
-  0b00111111, 0b10011100, //   #######  ###  
-  0b00111111, 0b00011100, //   ######   ###  
-  0b00011110, 0b00111000, //    ####   ###   
-  0b00011111, 0b11111000, //    ##########   
-  0b00001111, 0b11110000, //     ########    
-  0b00000011, 0b11000000, //       ####      
-  0b00000000, 0b00000000, //                 
-};
-
-unsigned char arrow_down_icon[] ={
-  0b00001111, 0b11110000, //     ########    
-  0b00011111, 0b11111000, //    ##########   
-  0b00011111, 0b11111000, //    ##########   
-  0b00011100, 0b00111000, //    ###    ###   
-  0b00011100, 0b00111000, //    ###    ###   
-  0b00011100, 0b00111000, //    ###    ###   
-  0b01111100, 0b00111110, //  #####    ##### 
-  0b11111100, 0b00111111, // ######    ######
-  0b11111100, 0b00111111, // ######    ######
-  0b01111000, 0b00011110, //  ####      #### 
-  0b00111100, 0b00111100, //   ####    ####  
-  0b00011110, 0b01111000, //    ####  ####   
-  0b00001111, 0b11110000, //     ########    
-  0b00000111, 0b11100000, //      ######     
-  0b00000011, 0b11000000, //       ####      
-  0b00000001, 0b10000000, //        ##       
-};
-
-unsigned char sun_icon[] ={
-  0b00000000, 0b00000000, //                 
-  0b00100000, 0b10000010, //   #     #     # 
-  0b00010000, 0b10000100, //    #    #    #  
-  0b00001000, 0b00001000, //     #       #   
-  0b00000001, 0b11000000, //        ###      
-  0b00000111, 0b11110000, //      #######    
-  0b00000111, 0b11110000, //      #######    
-  0b00001111, 0b11111000, //     #########   
-  0b01101111, 0b11111011, //  ## ######### ##
-  0b00001111, 0b11111000, //     #########   
-  0b00000111, 0b11110000, //      #######    
-  0b00000111, 0b11110000, //      #######    
-  0b00010001, 0b11000100, //    #   ###   #  
-  0b00100000, 0b00000010, //   #           # 
-  0b01000000, 0b10000001, //  #      #      #
-  0b00000000, 0b10000000, //         #       
-};
+unsigned long timerDelay = 7500; 
 
 // Clear the LEDs
 void colorWipe(uint32_t color, int wait, int numNeoPixels) {
@@ -188,8 +112,8 @@ void rainbow(int wait) {
 
 // Create display marker for each screen
 void displayIndicator(int displayNumber) {
-  int xCoordinates[5] = {44, 54, 64, 74, 84};
-  for (int i =0; i<5; i++) {
+  int xCoordinates[5] = {49, 59, 69, 79};
+  for (int i =0; i<4; i++) {
     if (i == displayNumber) {
       display.fillCircle(xCoordinates[i], 60, 2, WHITE);
     }
@@ -258,9 +182,11 @@ void displayLocalTime(){
 // SCREEN NUMBER 1: TEMPERATURE
 void displayTemperature(){
   display.clearDisplay();
-  display.setTextSize(2);
-  display.drawBitmap(15, 5, temperature_icon, 16, 16 ,1);
-  display.setCursor(35, 5);
+  display.setTextSize(1);
+  display.setCursor(0, 5);
+  display.print("Temperature ");
+  display.setTextSize(3);
+  display.setCursor(15, 25);
   delay(200);
   float temperature = bme.readTemperature();
   temperature = bme.readTemperature();
@@ -272,14 +198,6 @@ void displayTemperature(){
   display.print("C");
   display.setCursor(0, 34);
   display.setTextSize(1);
-  display.print("Humidity: ");
-  display.print(bme.readHumidity());
-  display.print(" %");
-  display.setCursor(0, 44);
-  display.setTextSize(1);
-  display.print("Pressure: ");
-  display.print(bme.readPressure()/100.0F);
-  display.print(" hpa");
   displayIndicator(displayScreenNum);
   display.display();
   int temperaturePer = map(temperature, -5, 36, 0, LED_COUNT-1);
@@ -289,25 +207,18 @@ void displayTemperature(){
 // SCREEN NUMBER 2: HUMIDITY
 void displayHumidity(){
   display.clearDisplay();
-  display.setTextSize(2);
-  display.drawBitmap(15, 5, humidity_icon, 16, 16 ,1);
-  display.setCursor(35, 5);
+  display.setTextSize(1);
+  display.setCursor(0, 5);
+  display.print("Humidity ");
+  display.setTextColor(WHITE);
+  display.setTextSize(3);
+  display.setCursor(15, 25);
   float humidity = bme.readHumidity();
   display.print(humidity);
+  display.setTextSize(1);
   display.print(" %");
   display.setCursor(0, 34);
   display.setTextSize(1);
-  display.print("Temperature: ");
-  display.print(bme.readTemperature());
-  display.cp437(true);
-  display.print(" ");
-  display.write(167);
-  display.print("C");
-  display.setCursor(0, 44);
-  display.setTextSize(1);
-  display.print("Pressure: ");
-  display.print(bme.readPressure()/100.0F);
-  display.print(" hpa");
   displayIndicator(displayScreenNum);
   display.display();
   int humidityPer = map(humidity, 0, 100, 0, LED_COUNT-1);
@@ -317,61 +228,19 @@ void displayHumidity(){
 // SCREEN NUMBER 3: PRESSURE
 void displayPressure(){
   display.clearDisplay();
+  display.setTextSize(1);
+  display.setCursor(0, 5);
+  display.print("Pressure ");
   display.setTextSize(2);
-  display.drawBitmap(0, 5, arrow_down_icon, 16, 16 ,1);
-  display.setCursor(20, 5);
+  display.setCursor(15, 25);
   display.print(bme.readPressure()/100.0F);
   display.setTextSize(1);
   display.print(" hpa");
   display.setCursor(0, 34);
   display.setTextSize(1);
-  display.print("Temperature: ");
-  display.print(bme.readTemperature());
-  display.cp437(true);
-  display.print(" ");
-  display.write(167);
-  display.print("C");
-  display.setCursor(0, 44);
-  display.setTextSize(1);
-  display.print("Humidity: ");
-  display.print(bme.readHumidity());
-  display.print(" hpa");
   displayIndicator(displayScreenNum);
   display.display();
   colorWipe(strip.Color(255,   0,   255), 50, 12);
-}
-
-// SCREEN NUMBER 4: LUMINOSITY
-void displayLDR(){
-  display.clearDisplay();
-  display.setTextSize(2);
-  display.drawBitmap(33, 5, sun_icon, 16, 16 ,1);
-  display.setCursor(53, 5);
-  int ldrReading = map(analogRead(ldr), 0, 4095, 100, 0);
-  delay(100);
-  display.print(ldrReading);
-  display.print(" %");
-  display.setTextSize(1);
-  display.setCursor(0, 34);
-  display.print("Temperature: ");
-  float temperatura = bme.readTemperature();
-  delay(100);
-  temperatura = bme.readTemperature();
-  display.print(temperatura);
-  display.print(" ");
-  display.cp437(true);
-  display.write(167);
-  display.print("C");
-  display.setCursor(0, 44);
-  display.setTextSize(1);
-  display.print("Humidity: ");
-  display.print(bme.readHumidity());
-  display.print(" %");
-  display.setCursor(0, 44);
-  displayIndicator(displayScreenNum);
-  display.display();
-  int ldrReadingPer = map(ldrReading, 0, 100, 0, LED_COUNT-1);
-  colorWipe(strip.Color(255,   255,   0), 50, ldrReadingPer);
 }
 
 // Display the right screen accordingly to the displayScreenNum
@@ -386,11 +255,8 @@ void updateScreen() {
   else if (displayScreenNum ==2){
     displayHumidity();
   }
-  else if (displayScreenNum==3){
-    displayPressure();
-  }
   else {
-    displayLDR();
+    displayPressure();
   }
 }
 
@@ -448,7 +314,7 @@ void setup() {
 
 void loop() {
 
-  // Change screen every 15 seconds (timerDelay variable)
+  // Change screen every 7.5 seconds (timerDelay variable)
   if ((millis() - lastTimer) > timerDelay) {
     updateScreen();
     Serial.println(displayScreenNum);
@@ -508,9 +374,8 @@ void loop() {
   }
 }
 ```
-
-## Comentarios del programa
-Para poder compilar este programa primeramente tendremos que declarar las siguientes librerias "Adafruit BME280 Library" (sensor BME), "Adafruit BusIO", "Adafruit GFX Library"c(Libreira para el display), "Adafruit NeoPixel" (Libreriaria para los LEDs), "Adafruit SSD1306" (Libreria del display) y "Adafruit Unified Sensor" (Libreria para el display) y a parte declararemos algunas librarias que no hay que instalar adicionalmente "Arduino.h", "Wire.h" (Componentes), "WiFi.h" (Conectar la placa al wifi), "time.h" (Configurar la hora actual), y finalmente una cabecera "Adafruit_I2CDevice.h":
+## Explicacion del codigo:
+Como con todo programa, antes de nada tenemos que declarar todas las librerias que sean necessarias, en nuestro caso algunas hay que instalarlas y otras no hace falta, aun asi todas son importantes. Las librerias son:
 ```
 #include <Arduino.h>
 #include <Adafruit_NeoPixel.h>
@@ -522,44 +387,41 @@ Para poder compilar este programa primeramente tendremos que declarar las siguie
 #include <WiFi.h>
 #include <time.h>
 #include "Adafruit_I2CDevice.h"
+#include "ESPAsyncWebServer.h"
+```
+Seguidamente, para poder connectar la placa  ESP32 a una red  Wi-Fi tenemos que declarar dos variables, el nombre de la red WiFi y la contraseña de esta:
+```
+const char* ssid     = "Telefedu";
+const char* password = "3e6eb1e28071";
 ```
 
-Para poder connectar la ESP32 a la red WiFi tenemos que declarar dos variables, la primera con el nombre de la red WiFi y a segunda con la contraseña de la misma:
+Ahora iniciamos una variable que sera un contador, tambies hacemos una variable para guradar el HTTP request. Seguidamente ponemos el código HTML, el cual mostrara todo lo que se vera en la pagina web, incluido los datos que captara nuestro sensor:
 ```
-const char* ssid     = "*****";
-const char* password = "*********";
-```
-
-Iniciamos una variable que actuara como contador, seguidamnet una variable para guradar el HTTP request. Seguidamente incorporamos el código HTML, con el contenido de la página web donde se mostraran los datos que obtenemos del sensor:
-```
-int contconexion = 0;
-
-String header; 
-
 String paginaInicio = "<!DOCTYPE html>"
 "<html>"
 "<head>"
 "<meta charset='utf-8' />"
 "<META HTTP-EQUIV='Refresh' CONTENT='1'>"
-"<title> Datos meteorologicos locales actuales </title>"
+"<title> Informacion Actual </title>"
 "</head>"
 "<body>"
 "<center>"
-"<h2> <u> Datos meteorologicos locales actuales </u> </h2>"
+"<h1> <u> Informacion Actual </u> </h1>"
 "<br>"
 "</center>";
 
+
 String Temperatura = 
-"<h3> <ul> <li> Temperatura: </li> </ul> </h3>"
-"<br>";
+"<h2> <ul> <li> Temperature: </li> </ul> </h2>"
+"<h2><h2>";
 
 String Humedad = 
-"<h3> <ul> <li> Humedad: </li> </ul> </h3>"
-"<br>";
+"<h2> <ul> <li> Humidity: </li> </ul> </h2>"
+"<h2><h2><br>";
 
 String Presion = 
-"<h3> <ul> <li> Presion: </li> </ul> </h3>"
-"<br>";
+"<h2> <ul> <li> Pressure: </li> </ul> </h2>"
+"<h2><h2><br>";
 
 String paginaFin = 
 "</body>"
