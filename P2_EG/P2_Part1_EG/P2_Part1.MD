@@ -46,18 +46,17 @@ static uint32_t lastMillis = 0;
 ```
 ## Salida:
 
-Despues de compilar y subir el codigo a la placa, podem ver que por pantalla nos saldra un texto diciendonos cuantas veces se ha pulsado el boton desde que se ha encendido el programa. Esto lo podemos ver en la siguiente foto
+Despues de compilar y subir el codigo a la placa, podem ver que por pantalla nos saldra un texto diciendonos cuantas veces se ha pulsado el boton desde que se ha encendido el programa. Esto lo podemos ver en la siguiente foto:
+
+![](p2foto1.jpeg)
+
 
 ## Funcionamiento:
-
-## Funcionamiento:
-En el código de la pràctica, primeramente hay que assignar un pin para la salida donde vamos a connectar el cable en que que vamos a connectar el pulsador en este caso sera en el pin 18 mediant la linea de código "Button button1 = {18, 0, false};".
-
-Con este pulsador vamos a provocar interrupciones, las cuales van a ser efectuadas al pulsar el pulsador. Al hacerlo, y teniendo el programa monitoreado, se va a mostrar por pantalla el mensaje "Button 1 has been pressed %u times\n", donde %u es el numero de veces que se ha pulsado el pulsador, i cada vez que le demos va a sumar 1.
-
-Cuando el pulsador no se use durante mas de un minuto, el programa va a mostrar por pantalla el mensaje "Interrupt Detached!", y para volver a poner en funcionameinto el programa hara falta hacer un RESET.
+Para empezar, podemos ver como lo primero que hacemos es declarar la libreria que vamos a usar, seguidamente hacemos un struct que nos va a dejar assignar un pin a la salida para el pulsador.<br>
+Con este boton lo que haremos sera crear interrupciones. Por otra parte tambien tendremos una seccion de codigo que lo que hara sera contar cuantas veces se ha pulsado este boton, es decir cuantas interrupciones se han hecho, asi pues el programa nos mostrara por pantalla la siguiente linea "Button 1 has been pressed %u times" donde
+"%u" sera el numero de veces que ha sido pulsado.<br>
+Finalmente si el boton no se ha pulsado durante >1minuto, se mostrara el mensaje de "Interrupt Detached!".
 
 
-El muestreo por pantalla queda de la siguiente forma:
 
-![alt text](MONITOR.JPG)
+
