@@ -11,19 +11,19 @@
 #include "ESPAsyncWebServer.h"
 
 
-//------------------Servidor Web en puerto 80---------------------
+//Puerto 80
 WiFiServer server(80);
 
-// Insert your network credentials
+// Wifi
 const char* ssid     = "Telefedu";
 const char* password = "3e6eb1e28071";
 
-//---------------------VARIABLES GLOBALES-------------------------
+//Variables
 int contconexion = 0;
 
-String header; // Variable para guardar el HTTP request
+String header; // HTTP Request
 
-//------------------------CODIGO HTML------------------------------
+//HTML
 String paginaInicio = "<!DOCTYPE html>"
 "<html>"
 "<head>"
@@ -54,12 +54,12 @@ String paginaFin =
 "</body>"
 "</html>";
 
-// NTP Server Details
+// NTP Server
 const char* ntpServer = "pool.ntp.org";
 const long  gmtOffset_sec = 0;
 const int   daylightOffset_sec = 7200;
 
-// OLED Display
+//Display
 #define SCREEN_WIDTH 128  // OLED display width, in pixels
 #define SCREEN_HEIGHT 64  // OLED display height, in pixels
 
@@ -75,7 +75,7 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &I2Cdisplay, -1);
 TwoWire I2CBME = TwoWire(0);
 Adafruit_BME280 bme;
 
-// Screens
+//Pantallas
 int displayScreenNum = 0;
 int displayScreenNumMax = 3;
 
@@ -83,7 +83,7 @@ unsigned long lastTimer = 0;
 unsigned long timerDelay = 7500; 
 
 
-// Create display marker for each screen
+//Circulitos
 void displayIndicator(int displayNumber) {
   int xCoordinates[5] = {49, 59, 69, 79};
   for (int i =0; i<4; i++) {
@@ -96,7 +96,7 @@ void displayIndicator(int displayNumber) {
   }
 }
 
-//SCREEN NUMBER 0: DATE AND TIME
+//Fecha y Hora
 void displayLocalTime(){
   struct tm timeinfo;
   if(!getLocalTime(&timeinfo)){
@@ -151,7 +151,7 @@ void displayLocalTime(){
   display.display();
 }
 
-// SCREEN NUMBER 1: TEMPERATURE
+//Temperatura
 void displayTemperature(){
   display.clearDisplay();
   display.setTextSize(1);
@@ -174,7 +174,7 @@ void displayTemperature(){
   display.display();
 }
 
-// SCREEN NUMBER 2: HUMIDITY
+//Humedad
 void displayHumidity(){
   display.clearDisplay();
   display.setTextSize(1);
@@ -193,7 +193,7 @@ void displayHumidity(){
   display.display();
 }
 
-// SCREEN NUMBER 3: PRESSURE
+//Presion
 void displayPressure(){
   display.clearDisplay();
   display.setTextSize(1);
@@ -210,7 +210,7 @@ void displayPressure(){
   display.display();
 }
 
-// Display the right screen accordingly to the displayScreenNum
+//Subprograma encargado de mostar la pantalla correcta
 void updateScreen() {
   if (displayScreenNum == 0){
     displayLocalTime();
@@ -226,13 +226,14 @@ void updateScreen() {
   }
 }
 
+// Setup
 void setup() {
   Serial.begin(115200);
   
   I2CBME.begin(I2C_SDA, I2C_SCL, 100000);
   I2Cdisplay.begin(I2Cdisplay_SDA, I2Cdisplay_SCL, 100000); 
 
-  // Initialize OLED Display
+  //Inicializar Display
   if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
     Serial.println(F("SSD1306 allocation failed"));
     for(;;);
@@ -240,14 +241,14 @@ void setup() {
   display.clearDisplay();
   display.setTextColor(WHITE);
   
-  // Initialize BME280
+  //Inicializar BME280
   bool status = bme.begin(0x76, &I2CBME);  
   if (!status) {
     Serial.println("Could not find a valid BME280 sensor, check wiring!");
     while (1);
   }
 
-  // Connect to Wi-Fi
+  //Wi-Fi
   Serial.print("Connecting to ");
   Serial.println(ssid);
   WiFi.begin(ssid, password);
@@ -288,19 +289,18 @@ void loop() {
     lastTimer = millis();
   }
 
-  //WEB
-  WiFiClient client = server.available();   // Escucha a los clientes entrantes
+  //Pagina Web
+  WiFiClient client = server.available();   // clientes entrantes
  
-  if (client) {                             // Si se conecta un nuevo cliente
+  if (client) {                             // Si se conecta
     Serial.println("New Client.");          // 
     String currentLine = "";                //
     while (client.connected()) {            // loop mientras el cliente est谩 conectado
       if (client.available()) {             // si hay bytes para leer desde el cliente
         char c = client.read();             // lee un byte
-        Serial.write(c);                    // imprime ese byte en el monitor serial
+        Serial.write(c);                    // 
         header += c;
         if (c == '\n') {                    // si el byte es un caracter de salto de linea
-          // si la nueva linea est谩 en blanco significa que es el fin del 
           // HTTP request del cliente, entonces respondemos:
           if (currentLine.length() == 0) {
             client.println("HTTP/1.1 200 OK");
@@ -308,27 +308,26 @@ void loop() {
             client.println("Connection: close");
             client.println();
           
-            // Muestra la p谩gina web
+            // Mostrar pagina web
             float temperature = bme.readTemperature();
             float humidity = bme.readHumidity();
             float pressure = bme.readPressure()/100.0F;
-            //int ldrReading = map(analogRead(ldr), 0, 4095, 100, 0);
             client.println(paginaInicio + Temperatura + String(temperature) + Humedad + String(humidity) + Presion + String(pressure) + paginaFin);
             
-            // la respuesta HTTP temina con una linea en blanco
+            // la respuesta HTTP temina
             client.println();
             break;
-          } else { // si tenemos una nueva linea limpiamos currentLine
+          } else { // si tenemos una nueva linea limpiamos
             currentLine = "";
           }
-        } else if (c != '\r') {  // si C es distinto al caracter de retorno de carro
+        } else if (c != '\r') {  // si C es distinto al caracter de retorno
           currentLine += c;      // lo agrega al final de currentLine
         }
       }
     }
-    // Limpiamos la variable header
+    // Limpiamos
     header = "";
-    // Cerramos la conexion
+    // Cerrar Conexion
     client.stop();
     Serial.println("Client disconnected.");
     Serial.println("");
