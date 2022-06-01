@@ -44,8 +44,13 @@ static uint32_t lastMillis = 0;
 
 }
 ```
+## Salida:
 
-## FUNCIONAMINETO:
+Despues de compilar y subir el codigo a la placa, podem ver que por pantalla nos saldra un texto diciendonos cuantas veces se ha pulsado el boton desde que se ha encendido el programa. Esto lo podemos ver en la siguiente foto
+
+## Funcionamiento:
+
+## Funcionamiento:
 En el código de la pràctica, primeramente hay que assignar un pin para la salida donde vamos a connectar el cable en que que vamos a connectar el pulsador en este caso sera en el pin 18 mediant la linea de código "Button button1 = {18, 0, false};".
 
 Con este pulsador vamos a provocar interrupciones, las cuales van a ser efectuadas al pulsar el pulsador. Al hacerlo, y teniendo el programa monitoreado, se va a mostrar por pantalla el mensaje "Button 1 has been pressed %u times\n", donde %u es el numero de veces que se ha pulsado el pulsador, i cada vez que le demos va a sumar 1.
