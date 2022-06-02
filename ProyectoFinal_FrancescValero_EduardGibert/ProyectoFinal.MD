@@ -684,7 +684,6 @@ void loop() {
             float temperature = bme.readTemperature();
             float humidity = bme.readHumidity();
             float pressure = bme.readPressure()/100.0F;
-            //int ldrReading = map(analogRead(ldr), 0, 4095, 100, 0);
             client.println(paginaInicio + Temperatura + String(temperature) + Humedad + String(humidity) + Presion + String(pressure) + paginaFin);
             
             // la respuesta HTTP temina con una linea en blanco
